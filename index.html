@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SEBANG 수리 요청서 (모바일)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+    :root {
+        --brand: #111a1a;
+        --brand-light: #e6e6e6;
+        --danger: #c0392b;
+        --plan: #2e75b6;
+        --bg: #f4f7f9;
+        --border: #e0e4e9;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+        margin: 0; padding: 0; background: var(--bg); color: #1a1a1a;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+        min-height: 100vh;
+    }
+    .top-bar {
+        position: sticky; top: 0; z-index: 20;
+        background: var(--brand); color: #fff;
+        padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top));
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .top-bar h1 { font-size: 17px; font-weight: 800; margin: 0; }
+    .top-bar .sub { font-size: 11px; opacity: .8; margin-top: 2px; font-weight: 400; }
+    .gear-btn {
+        background: rgba(255,255,255,.15); border: none; color: #fff;
+        width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer;
+    }
+    .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
+
+    .card {
+        background: #fff; border-radius: 14px; padding: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 14px;
+    }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label.field-label {
+        display: block; font-size: 13px; font-weight: 700; color: #555; margin-bottom: 6px;
+    }
+    select, input[type="text"], input[type="date"], textarea {
+        width: 100%; padding: 13px 12px; font-size: 16px; border: 1px solid #ddd;
+        border-radius: 10px; background: #fafbfc; font-family: inherit; color: #1a1a1a;
+    }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: var(--brand); background: #fff; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .toggle-btn {
+        padding: 14px 8px; text-align: center; border-radius: 10px; border: 2px solid #ddd;
+        background: #fff; font-weight: 800; font-size: 14px; color: #888; cursor: pointer;
+        transition: 0.15s;
+    }
+    .toggle-btn.active.emergency { border-color: var(--danger); color: var(--danger); background: #fdecea; }
+    .toggle-btn.active.plan { border-color: var(--plan); color: var(--plan); background: #eaf1fb; }
+
+    .section-title {
+        font-size: 14px; font-weight: 800; color: var(--brand); margin: 0 0 12px;
+        display: flex; align-items: center; gap: 6px;
+    }
+
+    .submit-bar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        background: #fff; border-top: 1px solid var(--border);
+        padding: 10px 16px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    .submit-bar .inner { max-width: 520px; margin: 0 auto; }
+    .btn-submit {
+        width: 100%; padding: 16px; border: none; border-radius: 12px;
+        background: var(--brand); color: #fff; font-size: 16px; font-weight: 800; cursor: pointer;
+    }
+    .btn-submit:disabled { opacity: 0.6; }
+    .btn-submit:active { background: #2c3e50; }
+
+    /* 최근 접수 내역 */
+    .recent-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; user-select: none;
+    }
+    .recent-toggle .chevron { transition: transform 0.2s; color: #999; }
+    .recent-toggle.open .chevron { transform: rotate(180deg); }
+    #recent-list { margin-top: 12px; display: none; }
+    #recent-list.open { display: block; }
+    .recent-item {
+        padding: 10px 0; border-bottom: 1px solid #f1f3f5; font-size: 13px;
+    }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-item .row1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .recent-item .equip { font-weight: 800; color: var(--brand); }
+    .badge {
+        font-size: 10px; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 8px;
+        white-space: nowrap;
+    }
+    .badge.emergency { background: var(--danger); }
+    .badge.plan { background: var(--plan); }
+    .status-pill {
+        font-size: 10px; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 8px; background: #888;
+    }
+    .recent-item .content { color: #555; margin-top: 3px; }
+    .recent-item .meta { color: #aaa; font-size: 11px; margin-top: 3px; }
+    .empty-msg { color: #999; font-size: 13px; text-align: center; padding: 16px 0; }
+
+    /* 토스트 */
+    #toast {
+        position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+        background: rgba(17,26,26,0.95); color: #fff; padding: 12px 20px; border-radius: 30px;
+        font-size: 13px; font-weight: 600; z-index: 100; opacity: 0; pointer-events: none;
+        transition: 0.25s; max-width: 90%; text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: #c0392b; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div>
+        <h1>🔧 SEBANG 수리 요청서</h1>
+        <div class="sub">현장에서 바로 접수하는 모바일 전용 화면</div>
+    </div>
+    <button class="gear-btn" onclick="configureGasUrl()" title="연동 설정">⚙</button>
+</div>
+
+<div class="wrap">
+
+    <div class="card">
+        <div class="section-title">📋 장비 정보</div>
+        <div class="field">
+            <label class="field-label">장비 구분</label>
+            <select id="f-equiptype" onchange="onEquipTypeChange()"></select>
+        </div>
+        <div class="field">
+            <label class="field-label">장비 번호</label>
+            <select id="f-equipnum"></select>
+        </div>
+        <div class="field">
+            <label class="field-label">정비구분</label>
+            <div class="toggle-group">
+                <div class="toggle-btn active emergency" id="btn-emergency" onclick="selectMaintType('돌발장애')">돌발장애</div>
+                <div class="toggle-btn plan" id="btn-plan" onclick="selectMaintType('계획정비')">계획정비</div>
+            </div>
+        </div>
+        <div class="field">
+            <label class="field-label">요청일자</label>
+            <input type="date" id="f-date">
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">📝 요청 내용</div>
+        <div class="field">
+            <textarea id="f-content" placeholder="예: 유압 실린더 누유 발생, 점검 필요"></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">👤 작성자</div>
+        <div class="grid-2">
+            <div class="field">
+                <label class="field-label">소속</label>
+                <input type="text" id="f-dept" placeholder="예: 하역팀">
+            </div>
+            <div class="field">
+                <label class="field-label">성명</label>
+                <input type="text" id="f-name" placeholder="예: 홍길동">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="recent-toggle" id="recent-toggle" onclick="toggleRecent()">
+            <div class="section-title" style="margin:0;">🕑 최근 제출 내역</div>
+            <span class="chevron">▾</span>
+        </div>
+        <div id="recent-list"><div class="empty-msg">불러오는 중...</div></div>
+    </div>
+
+</div>
+
+<div class="submit-bar">
+    <div class="inner">
+        <button class="btn-submit" id="btn-submit" onclick="submitRequest()">📤 요청서 제출</button>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ============ 기준정보 (메인 시스템과 동일한 기본값 + 시트 연동) ============
+const DEFAULT_EQUIP_DATA = {
+    "RMGC": ["RMGC"],
+    "그랍": ["GRA #09", "GRA #10", "GRA #11", "GRA #12", "GRA #13", "SIG #01", "SIG #02", "SIG #03", "SIG #04", "SIG #05", "SIG #07", "SIG #08", "SIG #09", "SIG #10", "SIG #11"],
+    "기타장비": ["5762", "6118", "6420", "6449", "6773", "6774", "6812", "7118", "8901", "고압세척기", "컴프레셔"],
+    "로더": ["5910", "6093", "6214"],
+    "리치스태커": ["5137", "5372", "6509", "7957", "8271", "8272"],
+    "세네보겐": ["5734"],
+    "스키드로더": ["5960", "6199", "9572"],
+    "소방차": ["5430"],
+    "지게차": ["6664", "7745", "8073", "8074", "6353(33T)"],
+    "트레일러": ["1540", "1541", "1639", "1640", "2140", "2273", "2339", "2419", "2550", "3800", "3828", "4162", "5368", "5469", "5471", "7274", "7278", "7717", "7718", "7719", "7720", "7721", "7737", "7738", "7739", "7740", "7741", "7742", "7756", "7889", "7891", "7892", "7895", "7896", "8493"],
+    "포터": ["1416", "5043", "5049", "7454", "0128", "0364"],
+    "하버크레인": ["5727", "5402"],
+    "모닝": ["8000"],
+    "정비공통": ["기타"]
+};
+let EQUIP_DATA = Object.assign({}, DEFAULT_EQUIP_DATA);
+
+// 메인 "정비 통합 관리 시스템"의 기준정보 시트와 동일한 주소(있으면 자동으로 최신 장비 목록을 받아옴)
+const DEFAULT_MASTER_DATA_URL = 'https://script.google.com/macros/s/AKfycbxNTCR1ulAL9CfTNCmVYfI4sB0TkalHEXkL9ktqDPtN32rOiAdgkW-W6pdUQvQtbyo/exec';
+
+// ============ 수리요청 연동 주소 (제시해주신 Apps Script 웹앱 URL 적용) ============
+const DEFAULT_REPAIR_GAS_URL = 'https://script.google.com/macros/s/AKfycbw8gfNkYkx4HdweEJOQMa9VjxA4sTc5II3_wNO0MzYw5ZnoPFhaED70D1kGWTHL2LVZMA/exec';
+const REPAIR_GAS_URL_STORAGE_KEY = 'sebang_repair_gas_url_override';
+let REPAIR_GAS_URL = (function () {
+    try { return localStorage.getItem(REPAIR_GAS_URL_STORAGE_KEY) || DEFAULT_REPAIR_GAS_URL; }
+    catch (e) { return DEFAULT_REPAIR_GAS_URL; }
+})();
+
+function configureGasUrl() {
+    let cur = '';
+    try { cur = localStorage.getItem(REPAIR_GAS_URL_STORAGE_KEY) || ''; } catch (e) {}
+    const val = prompt('수리요청 데이터를 저장할 구글시트 연동 주소(Apps Script 웹앱 URL)를 입력하세요.\n(미입력 시 기본 연동 주소가 사용됩니다)', cur || DEFAULT_REPAIR_GAS_URL);
+    if (val === null) return;
+    try {
+        if (val.trim()) localStorage.setItem(REPAIR_GAS_URL_STORAGE_KEY, val.trim());
+        else localStorage.removeItem(REPAIR_GAS_URL_STORAGE_KEY);
+        REPAIR_GAS_URL = val.trim() || DEFAULT_REPAIR_GAS_URL;
+        showToast('저장했습니다.');
+        loadRecent();
+    } catch (e) { showToast('저장에 실패했습니다.', true); }
+}
+
+// ============ 유틸 ============
+function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// ============ 장비 선택 ============
+function renderEquipTypeOptions() {
+    const sel = document.getElementById('f-equiptype');
+    sel.innerHTML = Object.keys(EQUIP_DATA).map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    onEquipTypeChange();
+}
+function onEquipTypeChange() {
+    const type = document.getElementById('f-equiptype').value;
+    const numSel = document.getElementById('f-equipnum');
+    const nums = EQUIP_DATA[type] || [];
+    numSel.innerHTML = nums.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+}
+
+async function loadMasterData() {
+    try {
+        const url = `${DEFAULT_MASTER_DATA_URL}${DEFAULT_MASTER_DATA_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.equipData) {
+            EQUIP_DATA = data.equipData;
+        }
+    } catch (e) {
+        console.warn('기준정보 연동 실패, 기본 장비 목록 사용:', e);
+    }
+    renderEquipTypeOptions();
+}
+
+// ============ 정비구분 토글 ============
+let selectedMaintType = '돌발장애';
+function selectMaintType(type) {
+    selectedMaintType = type;
+    document.getElementById('btn-emergency').classList.toggle('active', type === '돌발장애');
+    document.getElementById('btn-plan').classList.toggle('active', type === '계획정비');
+}
+
+// ============ 접수번호 생성 (메인 시스템과 동일한 형식: YYYYMMDD-순번) ============
+function generateReceiptNo(existingRows) {
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const count = (existingRows || []).filter(r => String(r.receiptNo || '').indexOf(ymd) === 0).length;
+    return `${ymd}-${String(count + 1).padStart(3, '0')}`;
+}
+
+// ============ 소속/성명 기억 (반복 입력 편의) ============
+function restoreRememberedFields() {
+    try {
+        const dept = localStorage.getItem('sebang_repair_last_dept');
+        const name = localStorage.getItem('sebang_repair_last_name');
+        if (dept) document.getElementById('f-dept').value = dept;
+        if (name) document.getElementById('f-name').value = name;
+    } catch (e) {}
+}
+function rememberFields(dept, name) {
+    try {
+        localStorage.setItem('sebang_repair_last_dept', dept);
+        localStorage.setItem('sebang_repair_last_name', name);
+    } catch (e) {}
+}
+
+// ============ 제출 ============
+async function submitRequest() {
+    const equipType = document.getElementById('f-equiptype').value;
+    const equipNum = document.getElementById('f-equipnum').value;
+    const requestDate = document.getElementById('f-date').value;
+    const requestContent = document.getElementById('f-content').value.trim();
+    const requesterDept = document.getElementById('f-dept').value.trim();
+    const requesterName = document.getElementById('f-name').value.trim();
+
+    if (!equipType || !equipNum) { showToast('장비 구분/번호를 선택해 주세요.', true); return; }
+    if (!requestContent) { showToast('요청 내용을 입력해 주세요.', true); return; }
+    if (!requesterName) { showToast('작성자 성명을 입력해 주세요.', true); return; }
+    if (!REPAIR_GAS_URL) {
+        showToast('⚙ 버튼을 눌러 연동 주소를 설정해 주세요.', true);
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ 제출 중...';
+
+    try {
+        // 오늘 날짜 기준 접수번호를 정확히 매기기 위해 현재 데이터를 먼저 조회
+        let existingRows = [];
+        try {
+            const listRes = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
+            const listData = await listRes.json();
+            existingRows = Array.isArray(listData) ? listData : (listData.rows || []);
+        } catch (e) { /* 조회 실패해도 제출 자체는 진행 */ }
+
+        const payload = {
+            action: 'create',
+            equipType, equipNum, requestDate,
+            maintType: selectedMaintType,
+            requestContent, requesterDept, requesterName,
+            receiptNo: generateReceiptNo(existingRows),
+            status: '접수대기'
+        };
+
+        await fetch(REPAIR_GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+
+        rememberFields(requesterDept, requesterName);
+        showToast(`"${payload.receiptNo}" 요청서가 접수되었습니다.`);
+
+        // 다음 입력을 위해 내용만 초기화 (장비/작성자 정보는 유지)
+        document.getElementById('f-content').value = '';
+        document.getElementById('f-date').value = todayStr();
+
+        existingRows.unshift(payload);
+        renderRecentList(existingRows);
+        const recentList = document.getElementById('recent-list');
+        const toggle = document.getElementById('recent-toggle');
+        recentList.classList.add('open');
+        toggle.classList.add('open');
+    } catch (e) {
+        console.error(e);
+        showToast('제출에 실패했습니다. 연동 주소를 확인해 주세요.', true);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// ============ 최근 제출 내역 ============
+function statusColor(status) {
+    switch (status) {
+        case '진행': return '#2e75b6';
+        case '관망': return '#e67e22';
+        case '반려': return '#c0392b';
+        default: return '#888';
+    }
+}
+function renderRecentList(rows) {
+    const box = document.getElementById('recent-list');
+    if (!rows || rows.length === 0) {
+        box.innerHTML = '<div class="empty-msg">제출된 요청이 없습니다.</div>';
+        return;
+    }
+    const sorted = rows.slice().sort((a, b) => new Date(b.requestDate || 0) - new Date(a.requestDate || 0)).slice(0, 8);
+    box.innerHTML = sorted.map(r => {
+        const isEmergency = (r.maintType || '돌발장애') === '돌발장애';
+        return `<div class="recent-item">
+            <div class="row1">
+                <span class="equip">[${escapeHtml(r.equipType || '-')}] ${escapeHtml(r.equipNum || '-')}</span>
+                <span style="display:flex; gap:4px; flex-shrink:0;">
+                    <span class="badge ${isEmergency ? 'emergency' : 'plan'}">${isEmergency ? '돌발장애' : '계획정비'}</span>
+                    <span class="status-pill" style="background:${statusColor(r.status)};">${escapeHtml(r.status || '접수대기')}</span>
+                </span>
+            </div>
+            <div class="content">${escapeHtml(r.requestContent || '')}</div>
+            <div class="meta">${escapeHtml(String(r.requestDate || '').substring(0, 10))} · ${escapeHtml(r.requesterDept || '')} ${escapeHtml(r.requesterName || '')} · ${escapeHtml(r.receiptNo || '')}</div>
+        </div>`;
+    }).join('');
+}
+async function loadRecent() {
+    const box = document.getElementById('recent-list');
+    if (!REPAIR_GAS_URL) {
+        box.innerHTML = '<div class="empty-msg">⚙ 버튼을 눌러 연동 주소를 설정해 주세요.</div>';
+        return;
+    }
+    try {
+        const res = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json();
+        const rows = Array.isArray(data) ? data : (data.rows || []);
+        renderRecentList(rows);
+    } catch (e) {
+        box.innerHTML = '<div class="empty-msg">불러오지 못했습니다.</div>';
+    }
+}
+function toggleRecent() {
+    document.getElementById('recent-list').classList.toggle('open');
+    document.getElementById('recent-toggle').classList.toggle('open');
+}
+
+// ============ 초기화 ============
+window.addEventListener('load', () => {
+    document.getElementById('f-date').value = todayStr();
+    restoreRememberedFields();
+    loadMasterData();
+    loadRecent();
+});
+</script>
+</body>
+</html>
