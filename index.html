@@ -28,10 +28,7 @@
     }
     .top-bar h1 { font-size: 17px; font-weight: 800; margin: 0; }
     .top-bar .sub { font-size: 11px; opacity: .8; margin-top: 2px; font-weight: 400; }
-    .gear-btn {
-        background: rgba(255,255,255,.15); border: none; color: #fff;
-        width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer;
-    }
+    
     .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
 
     .card {
@@ -125,7 +122,6 @@
         <h1>🔧 SEBANG 수리 요청서</h1>
         <div class="sub">현장에서 바로 접수하는 모바일 전용 화면</div>
     </div>
-    <button class="gear-btn" onclick="configureGasUrl()" title="연동 설정">⚙</button>
 </div>
 
 <div class="wrap">
@@ -214,30 +210,11 @@ const DEFAULT_EQUIP_DATA = {
 };
 let EQUIP_DATA = Object.assign({}, DEFAULT_EQUIP_DATA);
 
-// 메인 "정비 통합 관리 시스템"의 기준정보 시트와 동일한 주소(있으면 자동으로 최신 장비 목록을 받아옴)
+// 메인 "정비 통합 관리 시스템"의 기준정보 시트 연동 주소
 const DEFAULT_MASTER_DATA_URL = 'https://script.google.com/macros/s/AKfycbxNTCR1ulAL9CfTNCmVYfI4sB0TkalHEXkL9ktqDPtN32rOiAdgkW-W6pdUQvQtbyo/exec';
 
-// ============ 수리요청 연동 주소 (제시해주신 Apps Script 웹앱 URL 적용) ============
-const DEFAULT_REPAIR_GAS_URL = 'https://script.google.com/macros/s/AKfycbw8gfNkYkx4HdweEJOQMa9VjxA4sTc5II3_wNO0MzYw5ZnoPFhaED70D1kGWTHL2LVZMA/exec';
-const REPAIR_GAS_URL_STORAGE_KEY = 'sebang_repair_gas_url_override';
-let REPAIR_GAS_URL = (function () {
-    try { return localStorage.getItem(REPAIR_GAS_URL_STORAGE_KEY) || DEFAULT_REPAIR_GAS_URL; }
-    catch (e) { return DEFAULT_REPAIR_GAS_URL; }
-})();
-
-function configureGasUrl() {
-    let cur = '';
-    try { cur = localStorage.getItem(REPAIR_GAS_URL_STORAGE_KEY) || ''; } catch (e) {}
-    const val = prompt('수리요청 데이터를 저장할 구글시트 연동 주소(Apps Script 웹앱 URL)를 입력하세요.\n(미입력 시 기본 연동 주소가 사용됩니다)', cur || DEFAULT_REPAIR_GAS_URL);
-    if (val === null) return;
-    try {
-        if (val.trim()) localStorage.setItem(REPAIR_GAS_URL_STORAGE_KEY, val.trim());
-        else localStorage.removeItem(REPAIR_GAS_URL_STORAGE_KEY);
-        REPAIR_GAS_URL = val.trim() || DEFAULT_REPAIR_GAS_URL;
-        showToast('저장했습니다.');
-        loadRecent();
-    } catch (e) { showToast('저장에 실패했습니다.', true); }
-}
+// ============ 수리요청 연동 주소 (고정) ============
+const REPAIR_GAS_URL = 'https://script.google.com/macros/s/AKfycbw8gfNkYkx4HdweEJOQMa9VjxA4sTc5II3_wNO0MzYw5ZnoPFhaED70D1kGWTHL2LVZMA/exec';
 
 // ============ 유틸 ============
 function showToast(msg, isError) {
@@ -292,7 +269,7 @@ function selectMaintType(type) {
     document.getElementById('btn-plan').classList.toggle('active', type === '계획정비');
 }
 
-// ============ 접수번호 생성 (메인 시스템과 동일한 형식: YYYYMMDD-순번) ============
+// ============ 접수번호 생성 ============
 function generateReceiptNo(existingRows) {
     const now = new Date();
     const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
@@ -300,7 +277,7 @@ function generateReceiptNo(existingRows) {
     return `${ymd}-${String(count + 1).padStart(3, '0')}`;
 }
 
-// ============ 소속/성명 기억 (반복 입력 편의) ============
+// ============ 소속/성명 기억 ============
 function restoreRememberedFields() {
     try {
         const dept = localStorage.getItem('sebang_repair_last_dept');
@@ -328,10 +305,6 @@ async function submitRequest() {
     if (!equipType || !equipNum) { showToast('장비 구분/번호를 선택해 주세요.', true); return; }
     if (!requestContent) { showToast('요청 내용을 입력해 주세요.', true); return; }
     if (!requesterName) { showToast('작성자 성명을 입력해 주세요.', true); return; }
-    if (!REPAIR_GAS_URL) {
-        showToast('⚙ 버튼을 눌러 연동 주소를 설정해 주세요.', true);
-        return;
-    }
 
     const btn = document.getElementById('btn-submit');
     const originalText = btn.innerHTML;
@@ -339,13 +312,12 @@ async function submitRequest() {
     btn.innerHTML = '⏳ 제출 중...';
 
     try {
-        // 오늘 날짜 기준 접수번호를 정확히 매기기 위해 현재 데이터를 먼저 조회
         let existingRows = [];
         try {
             const listRes = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
             const listData = await listRes.json();
             existingRows = Array.isArray(listData) ? listData : (listData.rows || []);
-        } catch (e) { /* 조회 실패해도 제출 자체는 진행 */ }
+        } catch (e) {}
 
         const payload = {
             action: 'create',
@@ -361,7 +333,6 @@ async function submitRequest() {
         rememberFields(requesterDept, requesterName);
         showToast(`"${payload.receiptNo}" 요청서가 접수되었습니다.`);
 
-        // 다음 입력을 위해 내용만 초기화 (장비/작성자 정보는 유지)
         document.getElementById('f-content').value = '';
         document.getElementById('f-date').value = todayStr();
 
@@ -373,7 +344,7 @@ async function submitRequest() {
         toggle.classList.add('open');
     } catch (e) {
         console.error(e);
-        showToast('제출에 실패했습니다. 연동 주소를 확인해 주세요.', true);
+        showToast('제출에 실패했습니다. 다시 시도해 주세요.', true);
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -413,10 +384,6 @@ function renderRecentList(rows) {
 }
 async function loadRecent() {
     const box = document.getElementById('recent-list');
-    if (!REPAIR_GAS_URL) {
-        box.innerHTML = '<div class="empty-msg">⚙ 버튼을 눌러 연동 주소를 설정해 주세요.</div>';
-        return;
-    }
     try {
         const res = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
