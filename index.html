@@ -76,34 +76,6 @@
     .btn-submit:disabled { opacity: 0.6; }
     .btn-submit:active { background: #2c3e50; }
 
-    /* 최근 접수 내역 */
-    .recent-toggle {
-        display: flex; align-items: center; justify-content: space-between;
-        cursor: pointer; user-select: none;
-    }
-    .recent-toggle .chevron { transition: transform 0.2s; color: #999; }
-    .recent-toggle.open .chevron { transform: rotate(180deg); }
-    #recent-list { margin-top: 12px; display: none; }
-    #recent-list.open { display: block; }
-    .recent-item {
-        padding: 10px 0; border-bottom: 1px solid #f1f3f5; font-size: 13px;
-    }
-    .recent-item:last-child { border-bottom: none; }
-    .recent-item .row1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .recent-item .equip { font-weight: 800; color: var(--brand); }
-    .badge {
-        font-size: 10px; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 8px;
-        white-space: nowrap;
-    }
-    .badge.emergency { background: var(--danger); }
-    .badge.plan { background: var(--plan); }
-    .status-pill {
-        font-size: 10px; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 8px; background: #888;
-    }
-    .recent-item .content { color: #555; margin-top: 3px; }
-    .recent-item .meta { color: #aaa; font-size: 11px; margin-top: 3px; }
-    .empty-msg { color: #999; font-size: 13px; text-align: center; padding: 16px 0; }
-
     /* 토스트 */
     #toast {
         position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
@@ -168,14 +140,6 @@
                 <input type="text" id="f-name" placeholder="예: 홍길동">
             </div>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="recent-toggle" id="recent-toggle" onclick="toggleRecent()">
-            <div class="section-title" style="margin:0;">🕑 최근 제출 내역</div>
-            <span class="chevron">▾</span>
-        </div>
-        <div id="recent-list"><div class="empty-msg">불러오는 중...</div></div>
     </div>
 
 </div>
@@ -335,13 +299,6 @@ async function submitRequest() {
 
         document.getElementById('f-content').value = '';
         document.getElementById('f-date').value = todayStr();
-
-        existingRows.unshift(payload);
-        renderRecentList(existingRows);
-        const recentList = document.getElementById('recent-list');
-        const toggle = document.getElementById('recent-toggle');
-        recentList.classList.add('open');
-        toggle.classList.add('open');
     } catch (e) {
         console.error(e);
         showToast('제출에 실패했습니다. 다시 시도해 주세요.', true);
@@ -351,59 +308,11 @@ async function submitRequest() {
     }
 }
 
-// ============ 최근 제출 내역 ============
-function statusColor(status) {
-    switch (status) {
-        case '진행': return '#2e75b6';
-        case '관망': return '#e67e22';
-        case '반려': return '#c0392b';
-        default: return '#888';
-    }
-}
-function renderRecentList(rows) {
-    const box = document.getElementById('recent-list');
-    if (!rows || rows.length === 0) {
-        box.innerHTML = '<div class="empty-msg">제출된 요청이 없습니다.</div>';
-        return;
-    }
-    const sorted = rows.slice().sort((a, b) => new Date(b.requestDate || 0) - new Date(a.requestDate || 0)).slice(0, 8);
-    box.innerHTML = sorted.map(r => {
-        const isEmergency = (r.maintType || '돌발장애') === '돌발장애';
-        return `<div class="recent-item">
-            <div class="row1">
-                <span class="equip">[${escapeHtml(r.equipType || '-')}] ${escapeHtml(r.equipNum || '-')}</span>
-                <span style="display:flex; gap:4px; flex-shrink:0;">
-                    <span class="badge ${isEmergency ? 'emergency' : 'plan'}">${isEmergency ? '돌발장애' : '계획정비'}</span>
-                    <span class="status-pill" style="background:${statusColor(r.status)};">${escapeHtml(r.status || '접수대기')}</span>
-                </span>
-            </div>
-            <div class="content">${escapeHtml(r.requestContent || '')}</div>
-            <div class="meta">${escapeHtml(String(r.requestDate || '').substring(0, 10))} · ${escapeHtml(r.requesterDept || '')} ${escapeHtml(r.requesterName || '')} · ${escapeHtml(r.receiptNo || '')}</div>
-        </div>`;
-    }).join('');
-}
-async function loadRecent() {
-    const box = document.getElementById('recent-list');
-    try {
-        const res = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
-        const data = await res.json();
-        const rows = Array.isArray(data) ? data : (data.rows || []);
-        renderRecentList(rows);
-    } catch (e) {
-        box.innerHTML = '<div class="empty-msg">불러오지 못했습니다.</div>';
-    }
-}
-function toggleRecent() {
-    document.getElementById('recent-list').classList.toggle('open');
-    document.getElementById('recent-toggle').classList.toggle('open');
-}
-
 // ============ 초기화 ============
 window.addEventListener('load', () => {
     document.getElementById('f-date').value = todayStr();
     restoreRememberedFields();
     loadMasterData();
-    loadRecent();
 });
 </script>
 </body>
