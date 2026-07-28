@@ -133,7 +133,13 @@
         <div class="grid-2">
             <div class="field">
                 <label class="field-label">소속</label>
-                <input type="text" id="f-dept" placeholder="예: 하역팀">
+                <select id="f-dept">
+                    <option value="전북지사 하역팀">전북지사 하역팀</option>
+                    <option value="전북지사 운송팀">전북지사 운송팀</option>
+                    <option value="한국해운">한국해운</option>
+                    <option value="전북지사 물류운영팀">전북지사 물류운영팀</option>
+                    <option value="기타">기타</option>
+                </select>
             </div>
             <div class="field">
                 <label class="field-label">성명</label>
@@ -246,7 +252,10 @@ function restoreRememberedFields() {
     try {
         const dept = localStorage.getItem('sebang_repair_last_dept');
         const name = localStorage.getItem('sebang_repair_last_name');
-        if (dept) document.getElementById('f-dept').value = dept;
+        const deptSel = document.getElementById('f-dept');
+        if (dept && deptSel && Array.from(deptSel.options).some(o => o.value === dept)) {
+            deptSel.value = dept;
+        }
         if (name) document.getElementById('f-name').value = name;
     } catch (e) {}
 }
