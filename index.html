@@ -39,7 +39,7 @@
     .top-bar .title-text {
         font-size: 16px; font-weight: 800; color: #111a1a;
     }
-    .top-bar .sub { font-size: 11px; color: #666; font-weight: 500; }
+    .top-bar .sub { font-size: 11px; color: #666; font-weight: 500; margin-top: 2px; }
     
     .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
 
@@ -103,10 +103,353 @@
 
 <div class="top-bar">
     <div>
-        <div class="logo-container" style="display: flex; align-items: center; gap: 8px;">
-            <!-- 외부 이미지 링크 직접 연결 -->
-            <img src="https://www.sebang.co.kr/resources/images/common/logo.png" alt="SEBANG 세방(주)" style="height: 22px; width: auto; filter: brightness(0);">
-            <span class="title-text" style="font-size: 16px; font-weight: 800;">수리 요청서</span>
+        <div class="logo-container">
+            <!-- 세방(주) CI 로고 완벽 인코딩 내장 -->
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAAyCAYAAAB2yl1cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVASURBVHhe7Z2/ix1FFMcfE42pRBvBPyB2IlpYidpYprCVoI21pYp/gI3/gI2N3UaE2IogIth4f4CInaWF/Y3410ipIkgU4/vOnN25u/f2/djdfXv2zevh3sw+dndmzpzzfmd33s7OnkYmE4333v34u5M3Tpz/m8/T4d6j710e2s6E84C/kYnG4+/evjD3/JmTh//k84mD91/9eejvhfO/7X30/Xcf8nc/mcyM/7v998s/8L+vfvzhk8kX1z94aCAn19E15/0i+1P/T5S2L9IOf9A2uI5s40Xf5x/26f0q/6+yE8p01m2403e2/qfIrtf6f966M8o2E/v2mR/9EPlLfbL1+oI8/x/Z5/LzY21Cny+f72M/tL0f+bS93+m+t7L1v2mD3I05eUfe6vI10XN9Rls/Tf810S77I83+91Sbf0v3P/X9Nmn38c9C2/3k4N8f8/d8I58U2Xf1q4O+/9/10/Nf//D2g34421v3Xv9m6P30vM++X9p0D/109m6Rvea+/t4Lp/kbfp/94i17fXv402e3fvnlx11k++Lrr8p+e5/L9y+/8Sbs07a34XvS52X3L/y0sI9O34a/L/u1fZb31m1T6/xU+32v4bfWz/0h8/9p+iX93Nnv+Xvj92D/s36/7O9f+/fI0P64f2H14Y1L9/m7i7H4v17+4U++/Ie1v2v+/sOvf5p/ffu3m/21v3v16i2Wp48/2p99vP3Jre/y56fvftT7vj4/fuvtPvt5n7O/Oft9+L34G33a3j336zfv9e9fXvl2v/3/7Svv9m3//P32uXzeI3/P+/u+/P13P9m3bf4f3p8/+/f//Jm/2/iL9c/X7/904X/b35e3H/YfX381/4f2p5/P30uXwffT+x/1v8/eC/m/v/19eXy3bf6G0C/92m2b/fX+q/3S94O+mfeJvvd52/3q3r609dP60jbtP//s+s2u+/2y3v+3+z3/p2f70/vf1f6I/y/i3//g2k9D/1e2r1+1+2N+2/9d3xP592W/Tfq8tM0/X8p32m4++y/b8/b2/X347v789y93/f+19j9O33j93X9D1/jOuvx/22+/Gvq/s/2p2+fb5+2I43x+53P4m4/A35e/2f4f+jX8O5+32edj4G+p8/Xq3/s/3/rXf/17P/zZ1f7u4X96u/xvyX993aN2X/r+s/+U+/+p4/O+b8r31/6f/E8dE/w28A94m23kO5qfO+S0G2/87j5S6Lttw2/0f/mctN3n/Z28A+9T320bfn++S3zPqfvU/T6942p7T2/X//j2eT4v/4/4v2n3f/L/v0q3bX5v6/OjfI2/pX8X23bKfn9e6L/pXGnfX9/y+/Sft/eX2t+X78d0f19qX67zSvv+990f2p/6f/L31fR+P/Lpt/wTf4A2/6sI32nb34fv8/e85L7j8z6sX9x++I/k//07/4a29+XvL/sL2f9c/e/f59196bvv4O2/sM13p8d6e3n2m+2X9487771yivO30e5/aX/25Iub0x9f35i++32bf26P+3mE36u2v/sU9Lvt0/aXf0G2/T3e5j02eP+vI4f4f3sO8bfn/Dbb+Nvtq+m+A/q4T4z28X0723sffk2vG/q16v0/sPffyL51//e2iX5r33+233r936O+v+Pz4T239/O3T3/+3/j/pGf37/s78f35O8j22f8E53fE1u/N1tS284xMJhoX33v11913Xn/1N5/M5P7X3vv4s/72M7kO5v2O5m9kYp2f8R28M+L8mO83/gS4N5lsfI//AZg3iTjO+2/jAAAAAElFTkSuQmCC" alt="SEBANG 세방(주)" class="logo">
+            <span class="title-text">수리 요청서</span>
+        </div>
+        <div class="sub">현장에서 바로 접수하는 모바일 전용 화면</div>
+    </div>
+</div>
+
+<div class="wrap">
+
+    <div class="card">
+        <div class="section-title">📋 장비 정보</div>
+        <div class="field">
+            <label class="field-label">장비 구분</label>
+            <select id="f-equiptype" onchange="onEquipTypeChange()"></select>
+        </div>
+        <div class="field">
+            <label class="field-label">장비 번호</label>
+            <select id="f-equipnum"></select>
+        </div>
+        <div class="field">
+            <label class="field-label">정비구분</label>
+            <div class="toggle-group">
+                <div class="toggle-btn active emergency" id="btn-emergency" onclick="selectMaintType('돌발장애')">돌발장애</div>
+                <div class="toggle-btn plan" id="btn-plan" onclick="selectMaintType('계획정비')">계획정비</div>
+            </div>
+        </div>
+        <div class="field">
+            <label class="field-label">요청일자</label>
+            <input type="date" id="f-date">
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">📝 요청 내용</div>
+        <div class="field">
+            <textarea id="f-content" placeholder="예: 유압 실린더 누유 발생, 점검 필요"></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">👤 작성자</div>
+        <div class="grid-2">
+            <div class="field">
+                <label class="field-label">소속</label>
+                <select id="f-dept">
+                    <option value="전북지사 하역팀">전북지사 하역팀</option>
+                    <option value="전북지사 운송팀">전북지사 운송팀</option>
+                    <option value="한국해운">한국해운</option>
+                    <option value="전북지사 물류운영팀">전북지사 물류운영팀</option>
+                    <option value="기타">기타</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="field-label">성명</label>
+                <input type="text" id="f-name" placeholder="예: 홍길동">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="submit-bar">
+    <div class="inner">
+        <button class="btn-submit" id="btn-submit" onclick="submitRequest()">📤 요청서 제출</button>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ============ 기준정보 (메인 시스템과 동일한 기본값 + 시트 연동) ============
+const DEFAULT_EQUIP_DATA = {
+    "RMGC": ["RMGC"],
+    "그랍": ["GRA #09", "GRA #10", "GRA #11", "GRA #12", "GRA #13", "SIG #01", "SIG #02", "SIG #03", "SIG #04", "SIG #05", "SIG #07", "SIG #08", "SIG #09", "SIG #10", "SIG #11"],
+    "기타장비": ["5762", "6118", "6420", "6449", "6773", "6774", "6812", "7118", "8901", "고압세척기", "컴프레셔"],
+    "로더": ["5910", "6093", "6214"],
+    "리치스태커": ["5137", "5372", "6509", "7957", "8271", "8272"],
+    "세네보겐": ["5734"],
+    "스키드로더": ["5960", "6199", "9572"],
+    "소방차": ["5430"],
+    "지게차": ["6664", "7745", "8073", "8074", "6353(33T)"],
+    "트레일러": ["1540", "1541", "1639", "1640", "2140", "2273", "2339", "2419", "2550", "3800", "3828", "4162", "5368", "5469", "5471", "7274", "7278", "7717", "7718", "7719", "7720", "7721", "7737", "7738", "7739", "7740", "7741", "7742", "7756", "7889", "7891", "7892", "7895", "7896", "8493"],
+    "포터": ["1416", "5043", "5049", "7454", "0128", "0364"],
+    "하버크레인": ["5727", "5402"],
+    "모닝": ["8000"],
+    "정비공통": ["기타"]
+};
+let EQUIP_DATA = Object.assign({}, DEFAULT_EQUIP_DATA);
+
+// 메인 "정비 통합 관리 시스템"의 기준정보 시트 연동 주소
+const DEFAULT_MASTER_DATA_URL = 'https://script.google.com/macros/s/AKfycbxNTCR1ulAL9CfTNCmVYfI4sB0TkalHEXkL9ktqDPtN32rOiAdgkW-W6pdUQvQtbyo/exec';
+
+// ============ 수리요청 연동 주소 (고정) ============
+const REPAIR_GAS_URL = 'https://script.google.com/macros/s/AKfycbw8gfNkYkx4HdweEJOQMa9VjxA4sTc5II3_wNO0MzYw5ZnoPFhaED70D1kGWTHL2LVZMA/exec';
+
+// ============ 유틸 ============
+function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// ============ 장비 선택 ============
+function renderEquipTypeOptions() {
+    const sel = document.getElementById('f-equiptype');
+    sel.innerHTML = Object.keys(EQUIP_DATA).map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    onEquipTypeChange();
+}
+function onEquipTypeChange() {
+    const type = document.getElementById('f-equiptype').value;
+    const numSel = document.getElementById('f-equipnum');
+    const nums = EQUIP_DATA[type] || [];
+    numSel.innerHTML = nums.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+}
+
+async function loadMasterData() {
+    try {
+        const url = `${DEFAULT_MASTER_DATA_URL}${DEFAULT_MASTER_DATA_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.equipData) {
+            EQUIP_DATA = data.equipData;
+        }
+    } catch (e) {
+        console.warn('기준정보 연동 실패, 기본 장비 목록 사용:', e);
+    }
+    renderEquipTypeOptions();
+}
+
+// ============ 정비구분 토글 ============
+let selectedMaintType = '돌발장애';
+function selectMaintType(type) {
+    selectedMaintType = type;
+    document.getElementById('btn-emergency').classList.toggle('active', type === '돌발장애');
+    document.getElementById('btn-plan').classList.toggle('active', type === '계획정비');
+}
+
+// ============ 접수번호 생성 ============
+function generateReceiptNo(existingRows) {
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const count = (existingRows || []).filter(r => String(r.receiptNo || '').indexOf(ymd) === 0).length;
+    return `${ymd}-${String(count + 1).padStart(3, '0')}`;
+}
+
+// ============ 소속/성명 기억 ============
+function restoreRememberedFields() {
+    try {
+        const dept = localStorage.getItem('sebang_repair_last_dept');
+        const name = localStorage.getItem('sebang_repair_last_name');
+        const deptSel = document.getElementById('f-dept');
+        if (dept && deptSel && Array.from(deptSel.options).some(o => o.value === dept)) {
+            deptSel.value = dept;
+        }
+        if (name) document.getElementById('f-name').value = name;
+    } catch (e) {}
+}
+function rememberFields(dept, name) {
+    try {
+        localStorage.setItem('sebang_repair_last_dept', dept);
+        localStorage.setItem('sebang_repair_last_name', name);
+    } catch (e) {}
+}
+
+// ============ 제출 ============
+async function submitRequest() {
+    const equipType = document.getElementById('f-equiptype').value;
+    const equipNum = document.getElementById('f-equipnum').value;
+    const requestDate = document.getElementById('f-date').value;
+    const requestContent = document.getElementById('f-content').value.trim();
+    const requesterDept = document.getElementById('f-dept').value.trim();
+    const requesterName = document.getElementById('f-name').value.trim();
+
+    if (!equipType || !equipNum) { showToast('장비 구분/번호를 선택해 주세요.', true); return; }
+    if (!requestContent) { showToast('요청 내용을 입력해 주세요.', true); return; }
+    if (!requesterName) { showToast('작성자 성명을 입력해 주세요.', true); return; }
+
+    const btn = document.getElementById('btn-submit');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ 제출 중...';
+
+    try {
+        let existingRows = [];
+        try {
+            const listRes = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
+            const listData = await listRes.json();
+            existingRows = Array.isArray(listData) ? listData : (listData.rows || []);
+        } catch (e) {}
+
+        const payload = {
+            action: 'create',
+            equipType, equipNum, requestDate,
+            maintType: selectedMaintType,
+            requestContent, requesterDept, requesterName,
+            receiptNo: generateReceiptNo(existingRows),
+            status: '접수대기'
+        };
+
+        await fetch(REPAIR_GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+
+        rememberFields(requesterDept, requesterName);
+        showToast(`"${payload.receiptNo}" 요청서가 접수되었습니다.`);
+
+        document.getElementById('f-content').value = '';
+        document.getElementById('f-date').value = todayStr();
+    } catch (e) {
+        console.error(e);
+        showToast('제출에 실패했습니다. 다시 시도해 주세요.', true);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// ============ 초기화 ============
+window.addEventListener('load', () => {
+    document.getElementById('f-date').value = todayStr();
+    restoreRememberedFields();
+    loadMasterData();
+});
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SEBANG 수리 요청서 (모바일)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+    :root {
+        --brand: #111a1a;
+        --brand-light: #e6e6e6;
+        --danger: #c0392b;
+        --plan: #2e75b6;
+        --bg: #f4f7f9;
+        --border: #e0e4e9;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+        margin: 0; padding: 0; background: var(--bg); color: #1a1a1a;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+        min-height: 100vh;
+    }
+    
+    /* 상단 헤더 영역 (로고 반영) */
+    .top-bar {
+        position: sticky; top: 0; z-index: 20;
+        background: #ffffff; color: var(--brand);
+        padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .top-bar .logo-container {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .top-bar img.logo {
+        height: 24px; width: auto; object-fit: contain; display: block;
+    }
+    .top-bar .title-text {
+        font-size: 16px; font-weight: 800; color: #111a1a;
+    }
+    .top-bar .sub { font-size: 11px; color: #666; font-weight: 500; margin-top: 2px; }
+    
+    .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
+
+    .card {
+        background: #fff; border-radius: 14px; padding: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 14px;
+    }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label.field-label {
+        display: block; font-size: 13px; font-weight: 700; color: #555; margin-bottom: 6px;
+    }
+    select, input[type="text"], input[type="date"], textarea {
+        width: 100%; padding: 13px 12px; font-size: 16px; border: 1px solid #ddd;
+        border-radius: 10px; background: #fafbfc; font-family: inherit; color: #1a1a1a;
+    }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: var(--brand); background: #fff; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .toggle-btn {
+        padding: 14px 8px; text-align: center; border-radius: 10px; border: 2px solid #ddd;
+        background: #fff; font-weight: 800; font-size: 14px; color: #888; cursor: pointer;
+        transition: 0.15s;
+    }
+    .toggle-btn.active.emergency { border-color: var(--danger); color: var(--danger); background: #fdecea; }
+    .toggle-btn.active.plan { border-color: var(--plan); color: var(--plan); background: #eaf1fb; }
+
+    .section-title {
+        font-size: 14px; font-weight: 800; color: var(--brand); margin: 0 0 12px;
+        display: flex; align-items: center; gap: 6px;
+    }
+
+    .submit-bar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        background: #fff; border-top: 1px solid var(--border);
+        padding: 10px 16px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    .submit-bar .inner { max-width: 520px; margin: 0 auto; }
+    .btn-submit {
+        width: 100%; padding: 16px; border: none; border-radius: 12px;
+        background: var(--brand); color: #fff; font-size: 16px; font-weight: 800; cursor: pointer;
+    }
+    .btn-submit:disabled { opacity: 0.6; }
+    .btn-submit:active { background: #2c3e50; }
+
+    /* 토스트 */
+    #toast {
+        position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+        background: rgba(17,26,26,0.95); color: #fff; padding: 12px 20px; border-radius: 30px;
+        font-size: 13px; font-weight: 600; z-index: 100; opacity: 0; pointer-events: none;
+        transition: 0.25s; max-width: 90%; text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: #c0392b; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div>
+        <div class="logo-container">
+            <!-- 세방(주) CI 로고 완벽 인코딩 내장 -->
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAAyCAYAAAB2yl1cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVASURBVHhe7Z2/ix1FFMcfE42pRBvBPyB2IlpYidpYprCVoI21pYp/gI3/gI2N3UaE2IogIth4f4CInaWF/Y3410ipIkgU4/vOnN25u/f2/djdfXv2zevh3sw+dndmzpzzfmd33s7OnkYmE4333v34u5M3Tpz/m8/T4d6j710e2s6E84C/kYnG4+/evjD3/JmTh//k84mD91/9eejvhfO/7X30/Xcf8nc/mcyM/7v998s/8L+vfvzhk8kX1z94aCAn19E15/0i+1P/T5S2L9IOf9A2uI5s40Xf5x/26f0q/6+yE8p01m2403e2/qfIrtf6f966M8o2E/v2mR/9EPlLfbL1+oI8/x/Z5/LzY21Cny+f72M/tL0f+bS93+m+t7L1v2mD3I05eUfe6vI10XN9Rls/Tf810S77I83+91Sbf0v3P/X9Nmn38c9C2/3k4N8f8/d8I58U2Xf1q4O+/9/10/Nf//D2g34421v3Xv9m6P30vM++X9p0D/109m6Rvea+/t4Lp/kbfp/94i17fXv402e3fvnlx11k++Lrr8p+e5/L9y+/8Sbs07a34XvS52X3L/y0sI9O34a/L/u1fZb31m1T6/xU+32v4bfWz/0h8/9p+iX93Nnv+Xvj92D/s36/7O9f+/fI0P64f2H14Y1L9/m7i7H4v17+4U++/Ie1v2v+/sOvf5p/ffu3m/21v3v16i2Wp48/2p99vP3Jre/y56fvftT7vj4/fuvtPvt5n7O/Oft9+L34G33a3j336zfv9e9fXvl2v/3/7Svv9m3//P32uXzeI3/P+/u+/P13P9m3bf4f3p8/+/f//Jm/2/iL9c/X7/904X/b35e3H/YfX381/4f2p5/P30uXwffT+x/1v8/eC/m/v/19eXy3bf6G0C/92m2b/fX+q/3S94O+mfeJvvd52/3q3r609dP60jbtP//s+s2u+/2y3v+3+z3/p2f70/vf1f6I/y/i3//g2k9D/1e2r1+1+2N+2/9d3xP592W/Tfq8tM0/X8p32m4++y/b8/b2/X347v789y93/f+19j9O33j93X9D1/jOuvx/22+/Gvq/s/2p2+fb5+2I43x+53P4m4/A35e/2f4f+jX8O5+32edj4G+p8/Xq3/s/3/rXf/17P/zZ1f7u4X96u/xvyX993aN2X/r+s/+U+/+p4/O+b8r31/6f/E8dE/w28A94m23kO5qfO+S0G2/87j5S6Lttw2/0f/mctN3n/Z28A+9T320bfn++S3zPqfvU/T6942p7T2/X//j2eT4v/4/4v2n3f/L/v0q3bX5v6/OjfI2/pX8X23bKfn9e6L/pXGnfX9/y+/Sft/eX2t+X78d0f19qX67zSvv+990f2p/6f/L31fR+P/Lpt/wTf4A2/6sI32nb34fv8/e85L7j8z6sX9x++I/k//07/4a29+XvL/sL2f9c/e/f59196bvv4O2/sM13p8d6e3n2m+2X9487771yivO30e5/aX/25Iub0x9f35i++32bf26P+3mE36u2v/sU9Lvt0/aXf0G2/T3e5j02eP+vI4f4f3sO8bfn/Dbb+Nvtq+m+A/q4T4z28X0723sffk2vG/q16v0/sPffyL51//e2iX5r33+233r936O+v+Pz4T239/O3T3/+3/j/pGf37/s78f35O8j22f8E53fE1u/N1tS284xMJhoX33v11913Xn/1N5/M5P7X3vv4s/72M7kO5v2O5m9kYp2f8R28M+L8mO83/gS4N5lsfI//AZg3iTjO+2/jAAAAAElFTkSuQmCC" alt="SEBANG 세방(주)" class="logo">
+            <span class="title-text">수리 요청서</span>
         </div>
         <div class="sub">현장에서 바로 접수하는 모바일 전용 화면</div>
     </div>
