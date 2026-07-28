@@ -20,14 +20,26 @@
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
         min-height: 100vh;
     }
+    
+    /* 상단 헤더 영역 (로고 반영) */
     .top-bar {
         position: sticky; top: 0; z-index: 20;
-        background: var(--brand); color: #fff;
-        padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top));
+        background: #ffffff; color: var(--brand);
+        padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
         display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .top-bar h1 { font-size: 17px; font-weight: 800; margin: 0; }
-    .top-bar .sub { font-size: 11px; opacity: .8; margin-top: 2px; font-weight: 400; }
+    .top-bar .logo-container {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .top-bar img.logo {
+        height: 24px; width: auto; object-fit: contain; display: block;
+    }
+    .top-bar .title-text {
+        font-size: 16px; font-weight: 800; color: #111a1a;
+    }
+    .top-bar .sub { font-size: 11px; color: #666; font-weight: 500; }
     
     .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
 
@@ -91,7 +103,12 @@
 
 <div class="top-bar">
     <div>
-        <h1>🔧 SEBANG 수리 요청서</h1>
+        <div class="logo-container">
+            <!-- 이미지 경로(src)는 필요시 사내 서버의 절대 경로로 교체할 수 있습니다 -->
+            <img src="image_dd50d6.png" alt="SEBANG 세방(주)" class="logo" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='inline';">
+            <span id="alt-logo" class="title-text" style="display:none;">SEBANG</span>
+            <span class="title-text">수리 요청서</span>
+        </div>
         <div class="sub">현장에서 바로 접수하는 모바일 전용 화면</div>
     </div>
 </div>
