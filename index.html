@@ -78,6 +78,51 @@
     .btn-submit:disabled { opacity: 0.6; }
     .btn-submit:active { background: #2c3e50; }
 
+    .tab-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .tab-btn {
+        padding: 12px 8px; text-align: center; border-radius: 10px; border: none;
+        background: #fff; font-weight: 800; font-size: 14px; color: #888; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .tab-btn.active { background: var(--brand); color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .done-icon {
+        width: 44px; height: 44px; border-radius: 50%; background: #e6f4ea; color: #1e7e34;
+        display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 10px;
+    }
+    .link-box {
+        font-size: 12px; color: var(--plan); word-break: break-all; background: var(--bg);
+        border-radius: 8px; padding: 10px 12px; margin: 10px 0;
+    }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .btn-outline {
+        padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff;
+        font-weight: 700; font-size: 13px; color: #333; cursor: pointer;
+    }
+    .btn-outline:active { background: #f2f2f2; }
+
+    .step-row { display: flex; gap: 10px; }
+    .step-dotcol { display: flex; flex-direction: column; align-items: center; }
+    .step-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+    .step-dot.done { background: #1e9e75; }
+    .step-dot.current { background: var(--plan); }
+    .step-dot.pending { background: #fff; border: 2px solid #ddd; }
+    .step-line { width: 2px; flex: 1; min-height: 22px; background: #ddd; }
+    .step-body { padding-bottom: 16px; }
+    .step-title { font-size: 13px; font-weight: 700; color: #333; }
+    .step-title.pending-text { color: #aaa; font-weight: 600; }
+    .step-time { font-size: 11px; color: #999; margin-top: 2px; }
+    .status-badge {
+        display: inline-block; font-size: 12px; font-weight: 800; color: #fff;
+        padding: 4px 12px; border-radius: 14px; margin-top: 4px;
+    }
+    .reject-note {
+        margin-top: 10px; background: #fdecea; color: #a12a1f; font-size: 12px;
+        padding: 10px 12px; border-radius: 8px; line-height: 1.5;
+    }
+
     /* 토스트 */
     #toast {
         position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
@@ -103,6 +148,30 @@
 
 <div class="wrap">
 
+    <div class="tab-nav">
+        <button class="tab-btn active" id="tab-btn-write" onclick="switchTab('write')">요청서 작성</button>
+        <button class="tab-btn" id="tab-btn-lookup" onclick="switchTab('lookup')">내 요청 조회</button>
+    </div>
+
+    <div class="tab-content active" id="tab-write">
+
+    <div class="card" id="done-card" style="display:none;">
+        <div style="text-align:center;">
+            <div class="done-icon">✓</div>
+            <div style="font-size:15px; font-weight:800;">접수가 완료됐어요</div>
+            <div style="font-size:13px; color:#888; margin-top:2px;" id="done-receipt-no"></div>
+        </div>
+        <div style="font-size:12px; color:#888; margin-top:14px;">아래 링크로 진행상황을 확인할 수 있어요. 꼭 저장해두세요.</div>
+        <div class="link-box" id="done-link"></div>
+        <div class="btn-row">
+            <button class="btn-outline" onclick="copyDoneLink()">🔗 링크 복사</button>
+            <button class="btn-outline" onclick="shareDoneLink()">📤 카톡 공유</button>
+        </div>
+        <div style="font-size:11px; color:#aaa; text-align:center; margin-top:12px;">링크가 없어도 "내 요청 조회"에서 접수번호+휴대폰으로 확인 가능합니다</div>
+        <button class="btn-outline" style="width:100%; margin-top:10px;" onclick="resetWriteForm()">새 요청 작성하기</button>
+    </div>
+
+    <div id="write-form-area">
     <div class="card">
         <div class="section-title">📋 장비 정보</div>
         <div class="field">
@@ -151,11 +220,37 @@
                 <input type="text" id="f-name" placeholder="예: 홍길동">
             </div>
         </div>
+        <div class="field">
+            <label class="field-label">휴대폰번호</label>
+            <input type="text" id="f-phone" placeholder="예: 01012345678" inputmode="numeric" maxlength="11">
+            <div style="font-size:11px; color:#aaa; margin-top:6px;">진행상황 조회 시 본인확인에 사용됩니다 (숫자만 입력)</div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+
+    <div class="tab-content" id="tab-lookup">
+    <div class="card">
+        <div class="section-title">🔍 내 요청 조회</div>
+        <div class="field">
+            <label class="field-label">접수번호</label>
+            <input type="text" id="lk-receipt" placeholder="예: 20260202-003">
+        </div>
+        <div class="field">
+            <label class="field-label">휴대폰 뒷자리 4자리</label>
+            <input type="text" id="lk-phone4" placeholder="1234" inputmode="numeric" maxlength="4">
+        </div>
+        <button class="btn-submit" id="btn-lookup" onclick="lookupMyRequest()" style="margin-top:4px;">조회하기</button>
+        <div style="font-size:11px; color:#aaa; text-align:center; margin-top:10px;">두 값이 모두 일치해야 조회됩니다</div>
+    </div>
+
+    <div class="card" id="lookup-result-card" style="display:none;"></div>
     </div>
 
 </div>
 
-<div class="submit-bar">
+<div class="submit-bar" id="submit-bar">
     <div class="inner">
         <button class="btn-submit" id="btn-submit" onclick="submitRequest()">📤 요청서 제출</button>
     </div>
@@ -236,6 +331,15 @@ async function loadMasterData() {
     renderEquipTypeOptions();
 }
 
+// ============ 탭 전환 ============
+function switchTab(tab) {
+    document.getElementById('tab-write').classList.toggle('active', tab === 'write');
+    document.getElementById('tab-lookup').classList.toggle('active', tab === 'lookup');
+    document.getElementById('tab-btn-write').classList.toggle('active', tab === 'write');
+    document.getElementById('tab-btn-lookup').classList.toggle('active', tab === 'lookup');
+    document.getElementById('submit-bar').style.display = (tab === 'write' && document.getElementById('write-form-area').style.display !== 'none') ? 'block' : 'none';
+}
+
 // ============ 정비구분 토글 ============
 let selectedMaintType = '돌발장애';
 function selectMaintType(type) {
@@ -257,18 +361,39 @@ function restoreRememberedFields() {
     try {
         const dept = localStorage.getItem('sebang_repair_last_dept');
         const name = localStorage.getItem('sebang_repair_last_name');
+        const phone = localStorage.getItem('sebang_repair_last_phone');
         const deptSel = document.getElementById('f-dept');
         if (dept && deptSel && Array.from(deptSel.options).some(o => o.value === dept)) {
             deptSel.value = dept;
         }
         if (name) document.getElementById('f-name').value = name;
+        if (phone) document.getElementById('f-phone').value = phone;
     } catch (e) {}
 }
-function rememberFields(dept, name) {
+function rememberFields(dept, name, phone) {
     try {
         localStorage.setItem('sebang_repair_last_dept', dept);
         localStorage.setItem('sebang_repair_last_name', name);
+        localStorage.setItem('sebang_repair_last_phone', phone);
     } catch (e) {}
+}
+
+// ============ 링크 토큰 생성 ============
+function generateLinkToken() {
+    try {
+        const arr = new Uint8Array(8);
+        crypto.getRandomValues(arr);
+        return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+        return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    }
+}
+function buildLookupUrl(receiptNo, token) {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('rid', receiptNo);
+    url.searchParams.set('t', token);
+    return url.toString();
 }
 
 // ============ 제출 ============
@@ -279,10 +404,12 @@ async function submitRequest() {
     const requestContent = document.getElementById('f-content').value.trim();
     const requesterDept = document.getElementById('f-dept').value.trim();
     const requesterName = document.getElementById('f-name').value.trim();
+    const requesterPhone = document.getElementById('f-phone').value.replace(/[^0-9]/g, '');
 
     if (!equipType || !equipNum) { showToast('장비 구분/번호를 선택해 주세요.', true); return; }
     if (!requestContent) { showToast('요청 내용을 입력해 주세요.', true); return; }
     if (!requesterName) { showToast('작성자 성명을 입력해 주세요.', true); return; }
+    if (requesterPhone.length < 10) { showToast('휴대폰번호를 정확히 입력해 주세요.', true); return; }
 
     const btn = document.getElementById('btn-submit');
     const originalText = btn.innerHTML;
@@ -297,19 +424,25 @@ async function submitRequest() {
             existingRows = Array.isArray(listData) ? listData : (listData.rows || []);
         } catch (e) {}
 
+        const receiptNo = generateReceiptNo(existingRows);
+        const linkToken = generateLinkToken();
+
         const payload = {
             action: 'create',
             equipType, equipNum, requestDate,
             maintType: selectedMaintType,
-            requestContent, requesterDept, requesterName,
-            receiptNo: generateReceiptNo(existingRows),
+            requestContent, requesterDept, requesterName, requesterPhone,
+            receiptNo, linkToken,
             status: '접수대기'
         };
 
         await fetch(REPAIR_GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
 
-        rememberFields(requesterDept, requesterName);
-        showToast(`"${payload.receiptNo}" 요청서가 접수되었습니다.`);
+        rememberFields(requesterDept, requesterName, requesterPhone);
+        localStorage.setItem('sebang_repair_last_receipt', receiptNo);
+        localStorage.setItem('sebang_repair_last_token', linkToken);
+
+        showDoneScreen(receiptNo, linkToken);
 
         document.getElementById('f-content').value = '';
         document.getElementById('f-date').value = todayStr();
@@ -322,11 +455,129 @@ async function submitRequest() {
     }
 }
 
+// ============ 접수 완료 화면 ============
+let currentDoneLink = '';
+function showDoneScreen(receiptNo, token) {
+    currentDoneLink = buildLookupUrl(receiptNo, token);
+    document.getElementById('done-receipt-no').textContent = receiptNo;
+    document.getElementById('done-link').textContent = currentDoneLink;
+    document.getElementById('write-form-area').style.display = 'none';
+    document.getElementById('done-card').style.display = 'block';
+    document.getElementById('submit-bar').style.display = 'none';
+}
+function resetWriteForm() {
+    document.getElementById('done-card').style.display = 'none';
+    document.getElementById('write-form-area').style.display = 'block';
+    document.getElementById('submit-bar').style.display = 'block';
+}
+function copyDoneLink() {
+    navigator.clipboard.writeText(currentDoneLink).then(() => {
+        showToast('링크를 복사했어요.');
+    }).catch(() => showToast('복사에 실패했어요.', true));
+}
+function shareDoneLink() {
+    const text = `[SEBANG 수리요청] 접수번호 ${document.getElementById('done-receipt-no').textContent} 진행상황 확인: ${currentDoneLink}`;
+    if (navigator.share) {
+        navigator.share({ text }).catch(() => {});
+    } else {
+        copyDoneLink();
+    }
+}
+
+// ============ 내 요청 조회 ============
+const STAGE_ORDER = ['접수대기', '접수완료', '부품발주', '일정수립', '수리중', '완료'];
+const STAGE_LABEL = { '접수대기': '접수', '접수완료': '접수완료', '부품발주': '부품발주', '일정수립': '일정수립', '수리중': '수리중', '완료': '완료' };
+const STAGE_TIME_FIELD = { '접수완료': 'acceptedAt', '부품발주': 'partOrderAt', '일정수립': 'scheduledDate', '수리중': 'workStartAt', '완료': 'completeDate' };
+
+async function fetchAllRepairRows() {
+    const res = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data.rows || []);
+}
+
+async function lookupMyRequest() {
+    const receiptNo = document.getElementById('lk-receipt').value.trim();
+    const phone4 = document.getElementById('lk-phone4').value.trim();
+    if (!receiptNo || phone4.length !== 4) { showToast('접수번호와 휴대폰 뒷자리 4자리를 입력해 주세요.', true); return; }
+
+    const btn = document.getElementById('btn-lookup');
+    const originalText = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '⏳ 조회 중...';
+    try {
+        const rows = await fetchAllRepairRows();
+        const found = rows.find(r => String(r.receiptNo || '') === receiptNo && String(r.requesterPhone || '').slice(-4) === phone4);
+        if (!found) { showToast('일치하는 요청을 찾을 수 없습니다.', true); return; }
+        localStorage.setItem('sebang_repair_last_receipt', receiptNo);
+        renderLookupResult(found);
+    } catch (e) {
+        console.error(e);
+        showToast('조회에 실패했습니다.', true);
+    } finally {
+        btn.disabled = false; btn.innerHTML = originalText;
+    }
+}
+
+async function lookupByToken(receiptNo, token) {
+    try {
+        const rows = await fetchAllRepairRows();
+        const found = rows.find(r => String(r.receiptNo || '') === receiptNo && String(r.linkToken || '') === token);
+        if (!found) { showToast('요청 정보를 찾을 수 없습니다. 접수번호+휴대폰으로 조회해 주세요.', true); return; }
+        switchTab('lookup');
+        renderLookupResult(found);
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function renderLookupResult(row) {
+    const card = document.getElementById('lookup-result-card');
+    const status = row.status || '접수대기';
+    let bodyHtml = `<div class="section-title">📋 ${escapeHtml(row.receiptNo || '')}</div>
+        <div style="font-size:13px; color:#555; margin-bottom:10px;">${escapeHtml(row.equipType || '')} ${escapeHtml(row.equipNum || '')} · ${escapeHtml(row.requestContent || '')}</div>`;
+
+    if (status === '반려' || status === '관망') {
+        const badgeColor = status === '반려' ? '#c0392b' : '#e67e22';
+        bodyHtml += `<span class="status-badge" style="background:${badgeColor};">${escapeHtml(status)}</span>`;
+        if (row.statusNote) {
+            bodyHtml += `<div class="reject-note">${escapeHtml(row.statusNote)}</div>`;
+        }
+    } else {
+        const currentIdx = STAGE_ORDER.indexOf(status);
+        bodyHtml += '<div style="margin-top:6px;">';
+        STAGE_ORDER.forEach((stage, i) => {
+            const isLast = i === STAGE_ORDER.length - 1;
+            const state = i < currentIdx ? 'done' : (i === currentIdx ? 'current' : 'pending');
+            const timeField = STAGE_TIME_FIELD[stage];
+            const timeVal = timeField ? row[timeField] : '';
+            bodyHtml += `<div class="step-row">
+                <div class="step-dotcol">
+                    <div class="step-dot ${state}"></div>
+                    ${!isLast ? '<div class="step-line"></div>' : ''}
+                </div>
+                <div class="step-body">
+                    <div class="step-title ${state === 'pending' ? 'pending-text' : ''}">${escapeHtml(STAGE_LABEL[stage])}${state === 'current' ? ' (진행중)' : ''}</div>
+                    ${timeVal ? `<div class="step-time">${escapeHtml(String(timeVal).substring(0, 16).replace('T', ' '))}</div>` : ''}
+                </div>
+            </div>`;
+        });
+        bodyHtml += '</div>';
+    }
+    card.innerHTML = bodyHtml;
+    card.style.display = 'block';
+}
+
 // ============ 초기화 ============
 window.addEventListener('load', () => {
     document.getElementById('f-date').value = todayStr();
     restoreRememberedFields();
     loadMasterData();
+
+    const params = new URLSearchParams(window.location.search);
+    const rid = params.get('rid');
+    const token = params.get('t');
+    if (rid && token) {
+        lookupByToken(rid, token);
+    }
 });
 </script>
 </body>
