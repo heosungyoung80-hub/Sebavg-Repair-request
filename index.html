@@ -485,6 +485,20 @@ function shareDoneLink() {
 const STAGE_ORDER = ['접수대기', '접수완료', '부품발주', '일정수립', '수리중', '완료'];
 const STAGE_LABEL = { '접수대기': '접수', '접수완료': '접수완료', '부품발주': '부품발주', '일정수립': '일정수립', '수리중': '수리중', '완료': '완료' };
 const STAGE_TIME_FIELD = { '접수완료': 'acceptedAt', '부품발주': 'partOrderAt', '일정수립': 'scheduledDate', '수리중': 'workStartAt', '완료': 'completeDate' };
+// PC 담당자 화면(statusBadgeColor)과 동일한 색상 체계
+const STATUS_COLORS = {
+    '접수대기': '#888888',
+    '접수완료': '#0f6e56',
+    '부품발주': '#534ab7',
+    '일정수립': '#2e75b6',
+    '수리중': '#ba7517',
+    '완료': '#1e9e75',
+    '관망': '#e67e22',
+    '반려': '#c0392b'
+};
+function statusColor(status) {
+    return STATUS_COLORS[status] || '#888888';
+}
 
 async function fetchAllRepairRows() {
     const res = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
@@ -533,7 +547,7 @@ function renderLookupList(matched) {
     let html = `<div class="section-title">📋 조회된 요청 (${sorted.length}건)</div>`;
     sorted.forEach((r, idx) => {
         const status = r.status || '접수대기';
-        const badgeColor = (status === '반려') ? '#c0392b' : (status === '관망') ? '#e67e22' : (status === '완료') ? '#1e9e75' : '#2e75b6';
+        const badgeColor = statusColor(status);
         html += `<div onclick="selectLookupRow(${idx})" style="padding:12px; border:1px solid #eee; border-radius:10px; margin-bottom:8px; cursor:pointer;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:13px; font-weight:700;">${escapeHtml(r.receiptNo || '')}</span>
@@ -569,29 +583,30 @@ function renderLookupResult(row) {
     const card = document.getElementById('lookup-result-card');
     const status = row.status || '접수대기';
     let bodyHtml = `<div class="section-title">📋 ${escapeHtml(row.receiptNo || '')}</div>
-        <div style="font-size:13px; color:#555; margin-bottom:10px;">${escapeHtml(row.equipType || '')} ${escapeHtml(row.equipNum || '')} · ${escapeHtml(row.requestContent || '')}</div>`;
+        <div style="font-size:13px; color:#555; margin-bottom:6px;">${escapeHtml(row.equipType || '')} ${escapeHtml(row.equipNum || '')} · ${escapeHtml(row.requestContent || '')}</div>
+        <span class="status-badge" style="background:${statusColor(status)};">${escapeHtml(status)}</span>`;
 
     if (status === '반려' || status === '관망') {
-        const badgeColor = status === '반려' ? '#c0392b' : '#e67e22';
-        bodyHtml += `<span class="status-badge" style="background:${badgeColor};">${escapeHtml(status)}</span>`;
         if (row.statusNote) {
             bodyHtml += `<div class="reject-note">${escapeHtml(row.statusNote)}</div>`;
         }
     } else {
         const currentIdx = STAGE_ORDER.indexOf(status);
-        bodyHtml += '<div style="margin-top:6px;">';
+        bodyHtml += '<div style="margin-top:14px;">';
         STAGE_ORDER.forEach((stage, i) => {
             const isLast = i === STAGE_ORDER.length - 1;
             const state = i < currentIdx ? 'done' : (i === currentIdx ? 'current' : 'pending');
+            const dotStyle = state === 'current' ? ` style="background:${statusColor(stage)};"` : '';
+            const titleStyle = state === 'current' ? ` style="color:${statusColor(stage)};"` : '';
             const timeField = STAGE_TIME_FIELD[stage];
             const timeVal = timeField ? row[timeField] : '';
             bodyHtml += `<div class="step-row">
                 <div class="step-dotcol">
-                    <div class="step-dot ${state}"></div>
+                    <div class="step-dot ${state}"${dotStyle}></div>
                     ${!isLast ? '<div class="step-line"></div>' : ''}
                 </div>
                 <div class="step-body">
-                    <div class="step-title ${state === 'pending' ? 'pending-text' : ''}">${escapeHtml(STAGE_LABEL[stage])}${state === 'current' ? ' (진행중)' : ''}</div>
+                    <div class="step-title ${state === 'pending' ? 'pending-text' : ''}"${titleStyle}>${escapeHtml(STAGE_LABEL[stage])}${state === 'current' ? ' (진행중)' : ''}</div>
                     ${timeVal ? `<div class="step-time">${escapeHtml(String(timeVal).substring(0, 16).replace('T', ' '))}</div>` : ''}
                 </div>
             </div>`;
