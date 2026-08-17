@@ -592,7 +592,8 @@ async function submitRequest() {
             maintType: selectedMaintType,
             requestContent, requesterDept, requesterName, requesterPhone,
             receiptNo, linkToken,
-            status: '접수대기'
+            status: '접수대기',
+            submittedAt: new Date().toISOString()
         };
 
         await fetch(REPAIR_GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
