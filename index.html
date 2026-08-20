@@ -719,6 +719,30 @@ function buildLookupUrl(receiptNo, token) {
     return url.toString();
 }
 
+// ⚠ 중복 접수 방지: existingRows 중 "같은 장비 + 같은 요청자(휴대폰번호)"로
+// 최근 5분 이내(createdAt 기준)에 접수된 기록이 있는지 확인
+function isRecentDuplicateRequest(existingRows, equipType, equipNum, requesterPhone) {
+    const FIVE_MIN_MS = 5 * 60 * 1000;
+    const now = Date.now();
+    return existingRows.some(r => {
+        if (String(r.equipType || '') !== String(equipType)) return false;
+        if (String(r.equipNum || '') !== String(equipNum)) return false;
+        if (String(r.requesterPhone || '') !== String(requesterPhone)) return false;
+        const created = parseSheetDateTime(r.createdAt);
+        if (!created) return false;
+        const diff = now - created.getTime();
+        return diff >= 0 && diff <= FIVE_MIN_MS;
+    });
+}
+
+// 시트에서 내려오는 "yyyy-MM-dd HH:mm" 형식 문자열을 Date 객체로 변환 (실패 시 null)
+function parseSheetDateTime(value) {
+    if (!value) return null;
+    const iso = String(value).replace(' ', 'T');
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 // ============ 제출 ============
 async function submitRequest() {
     const equipType = document.getElementById('f-equiptype').value;
@@ -746,6 +770,17 @@ async function submitRequest() {
             const listData = await listRes.json();
             existingRows = Array.isArray(listData) ? listData : (listData.rows || []);
         } catch (e) {}
+
+        // ⚠ 중복 접수 방지: 인터넷이 느리거나 접속이 불안정할 때 같은 요청이 여러 번 눌려서
+        // 중복 저장되는 것을 막기 위해, 최근 5분 이내 동일 장비 + 동일 요청자의 접수 기록이 있는지 확인
+        if (isRecentDuplicateRequest(existingRows, equipType, equipNum, requesterPhone)) {
+            const proceedAnyway = confirm('⚠️ 최근 5분 이내 동일 장비 + 동일 요청자가 접수한 요청이 있습니다.\n\n그래도 다시 접수하시겠습니까?');
+            if (!proceedAnyway) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+        }
 
         const receiptNo = generateReceiptNo(existingRows);
         const linkToken = generateLinkToken();
