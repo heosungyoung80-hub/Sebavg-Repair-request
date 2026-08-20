@@ -221,6 +221,39 @@
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #toast.error { background: #c0392b; }
+
+    /* 사진 첨부 */
+    .photo-hint { font-size: 11px; color: #aaa; margin-top: 6px; line-height: 1.5; }
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .photo-slot {
+        position: relative; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+        background: #fafbfc; border: 1.5px dashed #ddd;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .photo-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-slot .add-ic { font-size: 22px; color: #bbb; }
+    .photo-slot .remove-btn {
+        position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+        background: rgba(0,0,0,0.6); color: #fff; border: none; font-size: 13px; font-weight: 800;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; line-height: 1;
+    }
+    .photo-slot .spinner {
+        width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: var(--plan);
+        border-radius: 50%; animation: photo-spin 0.8s linear infinite;
+    }
+    @keyframes photo-spin { to { transform: rotate(360deg); } }
+
+    .photo-preview-overlay {
+        position: fixed; inset: 0; z-index: 250; background: rgba(0,0,0,0.85);
+        display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .photo-preview-overlay.show { display: flex; }
+    .photo-preview-overlay img { max-width: 100%; max-height: 100%; border-radius: 8px; display: block; }
+    .photo-preview-close {
+        position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px;
+        width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15);
+        color: #fff; border: none; font-size: 18px; cursor: pointer;
+    }
 </style>
 </head>
 <body>
@@ -293,6 +326,13 @@
         <div class="field">
             <textarea id="f-content" placeholder="예: 유압 실린더 누유 발생, 점검 필요"></textarea>
         </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">📷 사진 첨부 (선택)</div>
+        <input type="file" id="f-photo-input" accept="image/*" style="display:none;" onchange="handlePhotoSelect(event)">
+        <div class="photo-grid" id="photo-grid"></div>
+        <div class="photo-hint">최대 3장까지 첨부할 수 있어요. 용량은 자동으로 줄어들어요.</div>
     </div>
 
     <div class="card">
@@ -369,10 +409,125 @@
     </div>
 </div>
 
+<div class="photo-preview-overlay" id="photo-preview-overlay" onclick="closePhotoPreview()">
+    <button class="photo-preview-close" onclick="closePhotoPreview()">✕</button>
+    <img id="photo-preview-img" src="" alt="첨부 사진 미리보기">
+</div>
+
 <div id="toast"></div>
 
 <script>
 'use strict';
+
+// ============ 사진 첨부 (최대 3장, 자동 리사이즈/압축) ============
+const MAX_PHOTOS = 3;
+const PHOTO_MAX_DIMENSION = 1280; // 긴 변 기준 최대 픽셀
+const PHOTO_JPEG_QUALITY = 0.7;
+let selectedPhotos = []; // [{ dataUrl, mimeType }]
+
+function renderPhotoGrid() {
+    const grid = document.getElementById('photo-grid');
+    if (!grid) return;
+    let html = '';
+    for (let i = 0; i < MAX_PHOTOS; i++) {
+        const p = selectedPhotos[i];
+        if (p) {
+            html += `
+                <div class="photo-slot" onclick="openPhotoPreview(${i})">
+                    <img src="${p.dataUrl}" alt="첨부 사진 ${i + 1}">
+                    <button type="button" class="remove-btn" onclick="event.stopPropagation(); removePhoto(${i})">✕</button>
+                </div>`;
+        } else if (i === selectedPhotos.length) {
+            html += `
+                <div class="photo-slot" id="photo-slot-add" onclick="triggerPhotoPicker()">
+                    <span class="add-ic">＋</span>
+                </div>`;
+        } else {
+            html += `<div class="photo-slot" style="opacity:0.3; cursor:default; border-style:solid;"></div>`;
+        }
+    }
+    grid.innerHTML = html;
+}
+
+function triggerPhotoPicker() {
+    if (selectedPhotos.length >= MAX_PHOTOS) { showToast(`사진은 최대 ${MAX_PHOTOS}장까지 첨부할 수 있어요.`, true); return; }
+    document.getElementById('f-photo-input').click();
+}
+
+function handlePhotoSelect(ev) {
+    const file = ev.target.files && ev.target.files[0];
+    ev.target.value = ''; // 같은 파일을 다시 선택해도 change 이벤트가 발생하도록 초기화
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('이미지 파일만 첨부할 수 있어요.', true); return; }
+    if (selectedPhotos.length >= MAX_PHOTOS) { showToast(`사진은 최대 ${MAX_PHOTOS}장까지 첨부할 수 있어요.`, true); return; }
+
+    // 압축 처리 중임을 보여주는 로딩 슬롯을 잠깐 표시
+    const grid = document.getElementById('photo-grid');
+    const addSlot = document.getElementById('photo-slot-add');
+    if (addSlot) addSlot.innerHTML = `<div class="spinner"></div>`;
+
+    compressImageFile(file)
+        .then(dataUrl => {
+            selectedPhotos.push({ dataUrl, mimeType: 'image/jpeg' });
+            renderPhotoGrid();
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('사진을 처리하지 못했어요. 다시 시도해 주세요.', true);
+            renderPhotoGrid();
+        });
+}
+
+// 이미지를 캔버스에 그려서 긴 변 기준 PHOTO_MAX_DIMENSION 이하로 축소하고,
+// JPEG로 재압축하여 용량을 자동으로 줄임 (원본이 아무리 커도 결과물은 일정 크기 이하로 유지됨)
+function compressImageFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('파일을 읽지 못했습니다.'));
+        reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('이미지를 불러오지 못했습니다.'));
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > height && width > PHOTO_MAX_DIMENSION) {
+                    height = Math.round(height * (PHOTO_MAX_DIMENSION / width));
+                    width = PHOTO_MAX_DIMENSION;
+                } else if (height > PHOTO_MAX_DIMENSION) {
+                    width = Math.round(width * (PHOTO_MAX_DIMENSION / height));
+                    height = PHOTO_MAX_DIMENSION;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', PHOTO_JPEG_QUALITY));
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removePhoto(idx) {
+    selectedPhotos.splice(idx, 1);
+    renderPhotoGrid();
+}
+
+function openPhotoPreview(idx) {
+    const p = selectedPhotos[idx];
+    if (!p) return;
+    document.getElementById('photo-preview-img').src = p.dataUrl;
+    document.getElementById('photo-preview-overlay').classList.add('show');
+}
+function closePhotoPreview() {
+    document.getElementById('photo-preview-overlay').classList.remove('show');
+}
+function clearSelectedPhotos() {
+    selectedPhotos = [];
+    renderPhotoGrid();
+}
+
 
 // ============ 기준정보 (메인 시스템과 동일한 기본값 + 시트 연동) ============
 const DEFAULT_EQUIP_DATA = {
@@ -593,7 +748,8 @@ async function submitRequest() {
             requestContent, requesterDept, requesterName, requesterPhone,
             receiptNo, linkToken,
             status: '접수대기',
-            submittedAt: new Date().toISOString()
+            submittedAt: new Date().toISOString(),
+            photos: selectedPhotos.map(p => ({ dataUrl: p.dataUrl, mimeType: p.mimeType }))
         };
 
         await fetch(REPAIR_GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -606,6 +762,7 @@ async function submitRequest() {
 
         document.getElementById('f-content').value = '';
         document.getElementById('f-date').value = todayStr();
+        clearSelectedPhotos();
     } catch (e) {
         console.error(e);
         showToast('제출에 실패했습니다. 다시 시도해 주세요.', true);
@@ -778,6 +935,7 @@ window.addEventListener('load', () => {
     document.getElementById('f-date').value = todayStr();
     restoreRememberedFields();
     loadMasterData();
+    renderPhotoGrid();
 
     try {
         const savedPhone4 = localStorage.getItem('sebang_repair_last_phone4');
