@@ -594,18 +594,40 @@ function onEquipTypeChange() {
 }
 
 async function loadMasterData() {
+    // 1) 기본 목록을 먼저 즉시 표시 (서버 응답을 기다리지 않음)
+    renderEquipTypeOptions();
+    // 2) 서버 기준정보는 백그라운드로 받아 성공 시에만 교체 (8초 타임아웃)
+    const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
     try {
         const url = `${DEFAULT_MASTER_DATA_URL}${DEFAULT_MASTER_DATA_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`;
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = await fetch(url, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        if (data && data.equipData) {
-            EQUIP_DATA = data.equipData;
+        const ed = data && data.equipData;
+        const valid = ed && typeof ed === 'object' && !Array.isArray(ed) &&
+            Object.keys(ed).length > 0 &&
+            Object.values(ed).every(v => Array.isArray(v));
+        if (valid) {
+            const sel = document.getElementById('f-equiptype');
+            const prevType = sel.value;
+            const prevNum = document.getElementById('f-equipnum').value;
+            EQUIP_DATA = ed;
+            renderEquipTypeOptions();
+            if (prevType && EQUIP_DATA[prevType]) {
+                sel.value = prevType;
+                onEquipTypeChange();
+                const numSel = document.getElementById('f-equipnum');
+                if (Array.from(numSel.options).some(o => o.value === prevNum)) numSel.value = prevNum;
+            }
+        } else {
+            console.warn('기준정보 형식 이상, 기본 장비 목록 유지:', data);
         }
     } catch (e) {
         console.warn('기준정보 연동 실패, 기본 장비 목록 사용:', e);
+    } finally {
+        if (timer) clearTimeout(timer);
     }
-    renderEquipTypeOptions();
 }
 
 // ============ 사용법 슬라이드 (교육자료 PPT 원본) ============
