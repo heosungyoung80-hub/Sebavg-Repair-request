@@ -254,9 +254,46 @@
         width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15);
         color: #fff; border: none; font-size: 18px; cursor: pointer;
     }
+
+    /* ===== 로그인 ===== */
+    #login-overlay { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: none; overflow-y: auto; }
+    #login-overlay.show { display: block; }
+    .login-box { max-width: 380px; margin: 0 auto; padding: 56px 20px 40px; }
+    .login-box h2 { font-size: 20px; margin: 0 0 4px; color: var(--brand); }
+    .login-box .lsub { font-size: 12px; color: #888; margin-bottom: 22px; }
+    .login-box select, .login-box input { width: 100%; padding: 13px 12px; font-size: 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; margin-bottom: 12px; }
+    .login-box button { width: 100%; padding: 14px; font-size: 16px; font-weight: 800; color: #fff; background: var(--brand); border: 0; border-radius: 10px; }
+    .login-box button:disabled { opacity: .6; }
+    .confirm-card { background:#fff; border-radius:14px; padding:26px 16px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.05); margin-bottom:16px; }
+    .confirm-name { font-size:26px; font-weight:800; color:var(--brand); margin-bottom:10px; }
+    .confirm-q { font-size:16px; font-weight:700; margin-bottom:6px; }
+    .confirm-sub { font-size:12px; color:#888; }
+    .login-box button.ghost { background:#fff; color:#555; border:1px solid var(--border); margin-top:10px; }
+    #login-msg { color: #c0392b; font-size: 13px; min-height: 18px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
+
+<div id="login-overlay">
+    <div class="login-box">
+        <h2>세방 수리 요청서</h2>
+        <div id="step-pick">
+            <div class="lsub">작성할 지사를 선택하세요</div>
+            <select id="lg-branch"></select>
+            <div id="login-msg"></div>
+            <button id="lg-btn" onclick="pickBranchNext()">다음</button>
+        </div>
+        <div id="step-confirm" style="display:none;">
+            <div class="confirm-card">
+                <div class="confirm-name" id="confirm-name"></div>
+                <div class="confirm-q">이 지사가 맞습니까?</div>
+                <div class="confirm-sub">선택한 지사의 장비 정보로 수리 요청서가 접수됩니다.</div>
+            </div>
+            <button id="confirm-yes" onclick="confirmBranch()">예, 맞습니다</button>
+            <button class="ghost" onclick="backToPick()">아니요, 다시 선택</button>
+        </div>
+    </div>
+</div>
 
 <div class="top-bar">
     <div class="brand-row">
@@ -266,10 +303,11 @@
             <div class="sub">현장에서 바로 접수하는 모바일 전용 화면</div>
         </div>
     </div>
-    <button class="help-btn" onclick="openManual()">
+    <div style="display:flex; gap:6px; align-items:center;"><button class="help-btn" onclick="openManual()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
         사용법
     </button>
+        <button class="help-btn" id="logout-btn" style="display:none;" onclick="doLogout()">지사 변경</button></div>
 </div>
 
 <div class="wrap">
@@ -341,10 +379,11 @@
             <div class="field">
                 <label class="field-label">소속</label>
                 <select id="f-dept">
-                    <option value="전북지사 하역팀">전북지사 하역팀</option>
-                    <option value="전북지사 운송팀">전북지사 운송팀</option>
+                    <option value="하역팀">하역팀</option>
+                    <option value="물류운영팀">물류운영팀</option>
+                    <option value="운송팀">운송팀</option>
+                    <option value="관리팀">관리팀</option>
                     <option value="한국해운">한국해운</option>
-                    <option value="전북지사 물류운영팀">전북지사 물류운영팀</option>
                     <option value="기타">기타</option>
                 </select>
             </div>
@@ -593,35 +632,131 @@ function onEquipTypeChange() {
     numSel.innerHTML = nums.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
 }
 
+
+// ============ 지사 선택 (비밀번호 없음) ============
+// 지사 목록·기준정보는 "SEBANG 기준정보 관리" 시트 스크립트(DEFAULT_MASTER_DATA_URL)에서 ?branch=지사코드 로 불러옵니다.
+const BRANCH_SESSION_KEY = 'sebang_repair_branch';   // sessionStorage: 브라우저를 닫으면 다시 선택
+const BRANCH_LAST_KEY = 'sebang_last_branch';        // localStorage: 마지막으로 선택한 지사(다음 선택 때 미리 표시)
+const FALLBACK_BRANCHES = [['01','부산'],['02','경기'],['03','광양'],['04','경남'],['05','전북'],['06','울산'],['07','경북'],['08','강원'],['09','삼천포'],['10','목포'],['11','당진'],['12','본사']];
+let SESSION = null;          // { user: { branchCode, branchName, name:'', viewAll } }
+let BRANCH_LIST = FALLBACK_BRANCHES;
+
+function masterUrl(params) {
+    return `${DEFAULT_MASTER_DATA_URL}${DEFAULT_MASTER_DATA_URL.includes('?') ? '&' : '?'}${params}&_ts=${Date.now()}`;
+}
+function branchDisplayName(name) {   // '전북' -> '전북지사', '본사'는 그대로
+    return /본사|지사$/.test(name) ? name : name + '지사';
+}
+function makeSession(code, name) {
+    return { user: { branchCode: code, branchName: name, name: '', viewAll: name === '본사' } };
+}
+function saveBranchSession() { try { sessionStorage.setItem(BRANCH_SESSION_KEY, JSON.stringify(SESSION.user)); } catch (e) {} }
+function loadBranchSession() {
+    try {
+        const u = JSON.parse(sessionStorage.getItem(BRANCH_SESSION_KEY) || 'null');
+        return (u && u.branchCode) ? { user: u } : null;
+    } catch (e) { return null; }
+}
+
+async function fillBranchOptions() {
+    try {
+        const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), 6000) : null;
+        const res = await fetch(masterUrl('action=branches'), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+        if (timer) clearTimeout(timer);
+        const r = await res.json();
+        if (r && r.branches && r.branches.length) {
+            const list = r.branches.filter(b => !/^MASTER/i.test(String(b.name).replace(/\s/g, ''))).map(b => [b.code, b.name]);
+            if (list.length) BRANCH_LIST = list;
+        }
+    } catch (e) { /* 기본 지사 목록 사용 */ }
+    let keep = '';
+    try { keep = localStorage.getItem(BRANCH_LAST_KEY) || ''; } catch (e) {}
+    const sel = document.getElementById('lg-branch');
+    sel.innerHTML = BRANCH_LIST.map(b => `<option value="${escapeHtml(b[0])}">${escapeHtml(branchDisplayName(b[1]))}</option>`).join('');
+    if (BRANCH_LIST.some(b => b[0] === keep)) sel.value = keep;
+    else if (BRANCH_LIST.some(b => b[0] === '05')) sel.value = '05';
+}
+function showLogin(msg) {
+    SESSION = null;
+    try { sessionStorage.removeItem(BRANCH_SESSION_KEY); } catch (e) {}
+    document.getElementById('login-msg').textContent = msg || '';
+    document.getElementById('step-pick').style.display = '';
+    document.getElementById('step-confirm').style.display = 'none';
+    document.getElementById('login-overlay').classList.add('show');
+    document.getElementById('logout-btn').style.display = 'none';
+    fillBranchOptions();
+}
+// 1단계: 지사 선택 -> 2단계: 확인 화면
+function pickBranchNext() {
+    const sel = document.getElementById('lg-branch');
+    if (!sel.value) { document.getElementById('login-msg').textContent = '지사를 선택하세요.'; return; }
+    const name = (BRANCH_LIST.find(b => b[0] === sel.value) || [sel.value, sel.value])[1];
+    document.getElementById('confirm-name').textContent = branchDisplayName(name);
+    document.getElementById('step-pick').style.display = 'none';
+    document.getElementById('step-confirm').style.display = '';
+}
+function backToPick() {
+    document.getElementById('step-confirm').style.display = 'none';
+    document.getElementById('step-pick').style.display = '';
+}
+function confirmBranch() {
+    const code = document.getElementById('lg-branch').value;
+    const name = (BRANCH_LIST.find(b => b[0] === code) || [code, code])[1];
+    SESSION = makeSession(code, name);
+    saveBranchSession();
+    try { localStorage.setItem(BRANCH_LAST_KEY, code); } catch (e) {}
+    enterApp();
+}
+function doLogout() {   // 상단 "지사 변경"
+    showLogin('');
+    if (typeof resetWriteForm === 'function') resetWriteForm();
+}
+// 지사 확인 후(또는 같은 브라우저에서 이미 확인한 지사 복원 후) 화면 시작
+function enterApp() {
+    document.getElementById('login-overlay').classList.remove('show');
+    document.getElementById('logout-btn').style.display = '';
+    const sub = document.querySelector('.top-bar .sub');
+    if (sub && SESSION) sub.textContent = branchDisplayName(SESSION.user.branchName);
+    loadMasterData();
+    const params = new URLSearchParams(window.location.search);
+    const rid = params.get('rid'), token = params.get('t');
+    if (rid && token) lookupByToken(rid, token);
+}
+// 지사 구분: 수리요청 행에 지사코드가 없으면(이전 데이터) 전북(05)으로 본다. 본사는 모두 표시.
+function rowBranchCode(r) { return String(r.branchCode || '').trim() || '05'; }
+function filterByBranch(rows) {
+    if (!SESSION || SESSION.user.viewAll) return rows;
+    return rows.filter(r => rowBranchCode(r) === SESSION.user.branchCode);
+}
+
 async function loadMasterData() {
-    // 1) 기본 목록을 먼저 즉시 표시 (서버 응답을 기다리지 않음)
+    // 1) 기본 목록을 먼저 즉시 표시
     renderEquipTypeOptions();
-    // 2) 서버 기준정보는 백그라운드로 받아 성공 시에만 교체 (8초 타임아웃)
+    // 2) 선택한 지사의 기준정보를 기준정보 시트에서 받아 교체 (8초 타임아웃)
+    if (!SESSION) return;
     const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
     try {
-        const url = `${DEFAULT_MASTER_DATA_URL}${DEFAULT_MASTER_DATA_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`;
-        const res = await fetch(url, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetch(masterUrl('branch=' + encodeURIComponent(SESSION.user.branchCode)), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
         const data = await res.json();
-        const ed = data && data.equipData;
+        if (!data || data.result === 'error') throw new Error((data && data.message) || '기준정보 오류');
+        const ed = data.equipData;
         const valid = ed && typeof ed === 'object' && !Array.isArray(ed) &&
-            Object.keys(ed).length > 0 &&
-            Object.values(ed).every(v => Array.isArray(v));
+            Object.keys(ed).length > 0 && Object.values(ed).every(v => Array.isArray(v));
         if (valid) {
             const sel = document.getElementById('f-equiptype');
-            const prevType = sel.value;
-            const prevNum = document.getElementById('f-equipnum').value;
+            const prevType = sel.value, prevNum = document.getElementById('f-equipnum').value;
             EQUIP_DATA = ed;
             renderEquipTypeOptions();
             if (prevType && EQUIP_DATA[prevType]) {
-                sel.value = prevType;
-                onEquipTypeChange();
+                sel.value = prevType; onEquipTypeChange();
                 const numSel = document.getElementById('f-equipnum');
                 if (Array.from(numSel.options).some(o => o.value === prevNum)) numSel.value = prevNum;
             }
         } else {
-            console.warn('기준정보 형식 이상, 기본 장비 목록 유지:', data);
+            showToast('이 지사의 장비 기준정보가 아직 등록되지 않아 기본 목록을 표시합니다. 담당자에게 문의하세요.', true);
+            console.warn('지사 기준정보에 장비 목록 없음:', data);
         }
     } catch (e) {
         console.warn('기준정보 연동 실패, 기본 장비 목록 사용:', e);
@@ -767,6 +902,7 @@ function parseSheetDateTime(value) {
 
 // ============ 제출 ============
 async function submitRequest() {
+    if (!SESSION) { showLogin('지사를 먼저 선택하세요.'); return; }
     const equipType = document.getElementById('f-equiptype').value;
     const equipNum = document.getElementById('f-equipnum').value;
     const requestDate = document.getElementById('f-date').value;
@@ -787,11 +923,7 @@ async function submitRequest() {
 
     try {
         let existingRows = [];
-        try {
-            const listRes = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
-            const listData = await listRes.json();
-            existingRows = Array.isArray(listData) ? listData : (listData.rows || []);
-        } catch (e) {}
+        try { existingRows = await fetchAllRepairRows(); } catch (e) {}
 
         // ⚠ 중복 접수 방지: 인터넷이 느리거나 접속이 불안정할 때 같은 요청이 여러 번 눌려서
         // 중복 저장되는 것을 막기 위해, 최근 5분 이내 동일 장비 + 동일 요청자의 접수 기록이 있는지 확인
@@ -813,6 +945,8 @@ async function submitRequest() {
             maintType: selectedMaintType,
             requestContent, requesterDept, requesterName, requesterPhone,
             receiptNo, linkToken,
+            branchCode: SESSION ? SESSION.user.branchCode : '',
+            branchName: SESSION ? SESSION.user.branchName : '',
             status: '접수대기',
             submittedAt: new Date().toISOString(),
             photos: selectedPhotos.map(p => ({ dataUrl: p.dataUrl, mimeType: p.mimeType }))
@@ -887,7 +1021,7 @@ const STAGE_TIME_FIELD = { '접수완료': 'acceptedAt', '부품발주': 'partOr
 async function fetchAllRepairRows() {
     const res = await fetch(`${REPAIR_GAS_URL}${REPAIR_GAS_URL.includes('?') ? '&' : '?'}_ts=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
-    return Array.isArray(data) ? data : (data.rows || []);
+    return filterByBranch(Array.isArray(data) ? data : (data.rows || []));
 }
 
 async function lookupMyRequest() {
@@ -1012,7 +1146,7 @@ function backToLookupSearch() {
 window.addEventListener('load', () => {
     document.getElementById('f-date').value = todayStr();
     restoreRememberedFields();
-    loadMasterData();
+    renderEquipTypeOptions();
     renderPhotoGrid();
 
     try {
@@ -1020,12 +1154,9 @@ window.addEventListener('load', () => {
         if (savedPhone4) document.getElementById('lk-phone4').value = savedPhone4;
     } catch (e) {}
 
-    const params = new URLSearchParams(window.location.search);
-    const rid = params.get('rid');
-    const token = params.get('t');
-    if (rid && token) {
-        lookupByToken(rid, token);
-    }
+    // 같은 브라우저에서 이미 확인한 지사가 있으면 바로 시작, 없으면 지사 선택 화면
+    SESSION = loadBranchSession();
+    if (SESSION) enterApp(); else showLogin('');
 });
 </script>
 </body>
