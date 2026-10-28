@@ -598,6 +598,10 @@ let EQUIP_DATA = Object.assign({}, DEFAULT_EQUIP_DATA);
 
 // 메인 "정비 통합 관리 시스템"의 기준정보 시트 연동 주소
 const DEFAULT_MASTER_DATA_URL = 'https://script.google.com/macros/s/AKfycbxNTCR1ulAL9CfTNCmVYfI4sB0TkalHEXkL9ktqDPtN32rOiAdgkW-W6pdUQvQtbyo/exec';
+// ⭐ 지사 목록·지사별 장비 기준정보는 메인 프로그램과 똑같이 '로그인 서버'에서 받습니다. (메인에서 입력한 기준정보가 그대로 보이도록)
+const AUTH_URL = 'https://script.google.com/macros/s/AKfycby0jK0FuhmMxd43Mr9Sxxj1Yq89X1DEJ67Zxvr3efkmewmlI8QlwGAnIAGVCz8EuMZgZA/exec';
+function authPost(body, ctrl) { return fetch(AUTH_URL, { method: 'POST', body: JSON.stringify(body), signal: ctrl ? ctrl.signal : undefined }).then(r => r.json()); }
+function isJeonbukName(n) { return String(n || '').replace(/\s|지사/g, '') === '전북'; }
 
 // ============ 수리요청 연동 주소 (고정) ============
 const REPAIR_GAS_URL = 'https://script.google.com/macros/s/AKfycbw8gfNkYkx4HdweEJOQMa9VjxA4sTc5II3_wNO0MzYw5ZnoPFhaED70D1kGWTHL2LVZMA/exec';
@@ -662,9 +666,8 @@ async function fillBranchOptions() {
     try {
         const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
         const timer = ctrl ? setTimeout(() => ctrl.abort(), 6000) : null;
-        const res = await fetch(masterUrl('action=branches'), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+        const r = await authPost({ action: 'branches' }, ctrl);
         if (timer) clearTimeout(timer);
-        const r = await res.json();
         if (r && r.branches && r.branches.length) {
             const list = r.branches.filter(b => !/^MASTER/i.test(String(b.name).replace(/\s/g, ''))).map(b => [b.code, b.name]);
             if (list.length) BRANCH_LIST = list;
@@ -732,16 +735,17 @@ function filterByBranch(rows) {
 }
 
 async function loadMasterData() {
-    // 1) 기본 목록을 먼저 즉시 표시
-    renderEquipTypeOptions();
-    // 2) 선택한 지사의 기준정보를 기준정보 시트에서 받아 교체 (8초 타임아웃)
     if (!SESSION) return;
+    const isJb = isJeonbukName(SESSION.user.branchName);
+    // 1) 전북이 아닌 지사는 전북 기본 목록이 잠깐이라도 보이지 않도록 먼저 비워 둠
+    if (!isJb) EQUIP_DATA = {};
+    renderEquipTypeOptions();
+    // 2) 선택한 지사의 장비 기준정보를 로그인 서버에서 받아 교체 (8초 타임아웃)
     const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
     try {
-        const res = await fetch(masterUrl('branch=' + encodeURIComponent(SESSION.user.branchCode)), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
-        const data = await res.json();
-        if (!data || data.result === 'error') throw new Error((data && data.message) || '기준정보 오류');
+        const data = await authPost({ action: 'mdPublic', branch: SESSION.user.branchCode }, ctrl);
+        if (!data || !data.ok) throw new Error((data && data.message) || '기준정보 오류');
         const ed = data.equipData;
         const valid = ed && typeof ed === 'object' && !Array.isArray(ed) &&
             Object.keys(ed).length > 0 && Object.values(ed).every(v => Array.isArray(v));
@@ -755,12 +759,16 @@ async function loadMasterData() {
                 const numSel = document.getElementById('f-equipnum');
                 if (Array.from(numSel.options).some(o => o.value === prevNum)) numSel.value = prevNum;
             }
+        } else if (isJb) {
+            showToast('전북 장비 기준정보가 아직 새 서버로 옮겨지지 않아 기본 목록을 표시합니다. 담당자에게 문의하세요.', true);
         } else {
-            showToast('이 지사의 장비 기준정보가 아직 등록되지 않아 기본 목록을 표시합니다. 담당자에게 문의하세요.', true);
-            console.warn('지사 기준정보에 장비 목록 없음:', data);
+            EQUIP_DATA = {}; renderEquipTypeOptions();
+            showToast('이 지사의 장비 기준정보가 아직 등록되지 않았습니다. 담당자에게 문의하세요.', true);
         }
     } catch (e) {
-        console.warn('기준정보 연동 실패, 기본 장비 목록 사용:', e);
+        console.warn('기준정보 연동 실패:', e);
+        if (!isJb) { EQUIP_DATA = {}; renderEquipTypeOptions(); }
+        showToast('장비 기준정보를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.', true);
     } finally {
         if (timer) clearTimeout(timer);
     }
