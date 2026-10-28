@@ -637,7 +637,7 @@ function onEquipTypeChange() {
 // 지사 목록·기준정보는 "SEBANG 기준정보 관리" 시트 스크립트(DEFAULT_MASTER_DATA_URL)에서 ?branch=지사코드 로 불러옵니다.
 const BRANCH_SESSION_KEY = 'sebang_repair_branch';   // sessionStorage: 브라우저를 닫으면 다시 선택
 const BRANCH_LAST_KEY = 'sebang_last_branch';        // localStorage: 마지막으로 선택한 지사(다음 선택 때 미리 표시)
-const FALLBACK_BRANCHES = [['01','부산'],['02','경기'],['03','광양'],['04','경남'],['05','전북'],['06','울산'],['07','경북'],['08','강원'],['09','삼천포'],['10','목포'],['11','당진'],['12','본사']];
+const FALLBACK_BRANCHES = [['32','부산'],['33','경기'],['34','광양'],['35','경남'],['36','전북'],['38','울산'],['39','경북'],['40','강원'],['41','삼천포'],['45','목포'],['46','당진'],['31','본사']];
 let SESSION = null;          // { user: { branchCode, branchName, name:'', viewAll } }
 let BRANCH_LIST = FALLBACK_BRANCHES;
 
@@ -675,7 +675,7 @@ async function fillBranchOptions() {
     const sel = document.getElementById('lg-branch');
     sel.innerHTML = BRANCH_LIST.map(b => `<option value="${escapeHtml(b[0])}">${escapeHtml(branchDisplayName(b[1]))}</option>`).join('');
     if (BRANCH_LIST.some(b => b[0] === keep)) sel.value = keep;
-    else if (BRANCH_LIST.some(b => b[0] === '05')) sel.value = '05';
+    else if (BRANCH_LIST.some(b => b[0] === jbBranchCode())) sel.value = jbBranchCode();
 }
 function showLogin(msg) {
     SESSION = null;
@@ -724,7 +724,8 @@ function enterApp() {
     if (rid && token) lookupByToken(rid, token);
 }
 // 지사 구분: 수리요청 행에 지사코드가 없으면(이전 데이터) 전북(05)으로 본다. 본사는 모두 표시.
-function rowBranchCode(r) { return String(r.branchCode || '').trim() || '05'; }
+function jbBranchCode() { const b = BRANCH_LIST.find(x => String(x[1]).replace(/\s|지사/g, '') === '전북'); return b ? b[0] : '36'; }
+function rowBranchCode(r) { return String(r.branchCode || '').trim() || jbBranchCode(); }
 function filterByBranch(rows) {
     if (!SESSION || SESSION.user.viewAll) return rows;
     return rows.filter(r => rowBranchCode(r) === SESSION.user.branchCode);
